@@ -148,3 +148,47 @@ pub fn[W] trim(transducer : Transducer[W]) -> TrimResult[W] {
   }
   { graph: build_transducer(builder), old_to_new: mapping, }
 }
+
+///|
+/// Return a deterministic topological order of every state in a DAG.
+/// All disconnected components are included. Among currently ready states,
+/// lower state identifiers are emitted first; newly ready states are appended
+/// after states already in the queue. A cyclic graph returns `GraphHasCycle`.
+pub fn[W] topological_order(
+  transducer : Transducer[W],
+) -> Result[Array[Int], WfstError] {
+  let count = transducer.outgoing.length()
+  let indegree : Array[Int] = []
+  for _ in 0..<count {
+    indegree.push(0)
+  }
+  for arcs in transducer.outgoing {
+    for arc in arcs {
+      indegree[arc.destination] = indegree[arc.destination] + 1
+    }
+  }
+  let queue : Array[Int] = []
+  for state in 0..<count {
+    if indegree[state] == 0 {
+      queue.push(state)
+    }
+  }
+  let order : Array[Int] = []
+  let mut cursor = 0
+  while cursor < queue.length() {
+    let state = queue[cursor]
+    order.push(state)
+    for arc in transducer.outgoing[state] {
+      indegree[arc.destination] = indegree[arc.destination] - 1
+      if indegree[arc.destination] == 0 {
+        queue.push(arc.destination)
+      }
+    }
+    cursor = cursor + 1
+  }
+  if order.length() == count {
+    Ok(order)
+  } else {
+    Err(WfstError::GraphHasCycle)
+  }
+}

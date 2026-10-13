@@ -30,6 +30,7 @@ pub(all) enum WfstError {
   InvalidStateId(Int)
   NoStartState
   UnsupportedEpsilonComposition
+  GraphHasCycle
   NegativeWeight
   WeightOutOfRange
   NoAcceptingPath

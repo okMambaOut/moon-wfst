@@ -56,6 +56,8 @@ pub fn[W] set_start(TransducerBuilder[W], Int) -> Result[Unit, WfstError]
 
 pub fn[W] shortest_path(Transducer[W], PathOrder[W]) -> Result[AcceptingPath[W], WfstError]
 
+pub fn[W] topological_order(Transducer[W]) -> Result[Array[Int], WfstError]
+
 pub fn[W] transducer_arcs_from(Transducer[W], Int) -> Result[Array[Arc[W]], WfstError]
 
 pub fn[W] transducer_builder(Semiring[W]) -> TransducerBuilder[W]
@@ -164,6 +166,7 @@ pub(all) enum WfstError {
   InvalidStateId(Int)
   NoStartState
   UnsupportedEpsilonComposition
+  GraphHasCycle
   NegativeWeight
   WeightOutOfRange
   NoAcceptingPath

@@ -907,3 +907,90 @@ test "concatenating an unstarted right graph clears left acceptance" {
   assert_eq(@moon-wfst.transducer_start_state(combined), Some(0))
   assert_eq(@moon-wfst.transducer_final_weight(combined, 0).unwrap(), None)
 }
+
+///|
+test "topological order includes disconnected components deterministically" {
+  let builder = @moon-wfst.transducer_builder(@moon-wfst.boolean_semiring())
+  let a = @moon-wfst.add_state(builder)
+  let b = @moon-wfst.add_state(builder)
+  let c = @moon-wfst.add_state(builder)
+  let isolated = @moon-wfst.add_state(builder)
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      a,
+      @moon-wfst.Label::Symbol("a"),
+      @moon-wfst.Label::Symbol("a"),
+      c,
+      true,
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      b,
+      @moon-wfst.Label::Symbol("b"),
+      @moon-wfst.Label::Symbol("b"),
+      c,
+      true,
+    ),
+  )
+  let order = @moon-wfst.topological_order(@moon-wfst.build_transducer(builder)).unwrap()
+  assert_eq(order, [a, b, isolated, c])
+}
+
+///|
+test "topological order rejects multi-state and self cycles" {
+  let builder = @moon-wfst.transducer_builder(@moon-wfst.boolean_semiring())
+  let first = @moon-wfst.add_state(builder)
+  let second = @moon-wfst.add_state(builder)
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      first,
+      @moon-wfst.Label::Epsilon,
+      @moon-wfst.Label::Epsilon,
+      second,
+      true,
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      second,
+      @moon-wfst.Label::Epsilon,
+      @moon-wfst.Label::Epsilon,
+      first,
+      true,
+    ),
+  )
+  assert_true(
+    @moon-wfst.topological_order(@moon-wfst.build_transducer(builder))
+    is Err(@moon-wfst.GraphHasCycle),
+  )
+  let self_loop = @moon-wfst.transducer_builder(@moon-wfst.boolean_semiring())
+  let only = @moon-wfst.add_state(self_loop)
+  ignore(
+    @moon-wfst.add_arc(
+      self_loop,
+      only,
+      @moon-wfst.Label::Epsilon,
+      @moon-wfst.Label::Epsilon,
+      only,
+      true,
+    ),
+  )
+  assert_true(
+    @moon-wfst.topological_order(@moon-wfst.build_transducer(self_loop))
+    is Err(@moon-wfst.GraphHasCycle),
+  )
+}
+
+///|
+test "empty graph has empty topological order" {
+  let builder = @moon-wfst.transducer_builder(@moon-wfst.boolean_semiring())
+  assert_eq(
+    @moon-wfst.topological_order(@moon-wfst.build_transducer(builder)).unwrap(),
+    [],
+  )
+}
