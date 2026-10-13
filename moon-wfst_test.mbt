@@ -338,3 +338,189 @@ test "composition requires explicit starts" {
     is Err(@moon-wfst.NoStartState),
   )
 }
+
+///|
+fn tropical_value_of(weight : @moon-wfst.TropicalWeight) -> Int {
+  @moon-wfst.tropical_value(weight).unwrap()
+}
+
+///|
+test "shortest path uses tropical costs and includes final weight" {
+  let semiring = @moon-wfst.tropical_semiring()
+  let builder = @moon-wfst.transducer_builder(semiring)
+  let start = @moon-wfst.add_state(builder)
+  let via_fast = @moon-wfst.add_state(builder)
+  let via_slow = @moon-wfst.add_state(builder)
+  let goal = @moon-wfst.add_state(builder)
+  ignore(@moon-wfst.set_start(builder, start))
+  ignore(
+    @moon-wfst.set_final(builder, goal, @moon-wfst.tropical_cost(3).unwrap()),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      start,
+      @moon-wfst.Label::Symbol("a"),
+      @moon-wfst.Label::Symbol("x"),
+      via_fast,
+      @moon-wfst.tropical_cost(2).unwrap(),
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      via_fast,
+      @moon-wfst.Label::Symbol("b"),
+      @moon-wfst.Label::Symbol("y"),
+      goal,
+      @moon-wfst.tropical_cost(2).unwrap(),
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      start,
+      @moon-wfst.Label::Symbol("c"),
+      @moon-wfst.Label::Symbol("z"),
+      via_slow,
+      @moon-wfst.tropical_cost(1).unwrap(),
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      via_slow,
+      @moon-wfst.Label::Symbol("d"),
+      @moon-wfst.Label::Symbol("w"),
+      goal,
+      @moon-wfst.tropical_cost(10).unwrap(),
+    ),
+  )
+  let path = @moon-wfst.shortest_path(
+    @moon-wfst.build_transducer(builder),
+    @moon-wfst.tropical_path_order(),
+  ).unwrap()
+  let states = @moon-wfst.accepting_path_states(path)
+  assert_eq(states.length(), 3)
+  assert_eq(states[0], start)
+  assert_eq(states[1], via_fast)
+  assert_eq(states[2], goal)
+  assert_eq(@moon-wfst.accepting_path_steps(path).length(), 2)
+  assert_eq(tropical_value_of(@moon-wfst.accepting_path_total_weight(path)), 7)
+  assert_eq(tropical_value_of(@moon-wfst.accepting_path_final_weight(path)), 3)
+}
+
+///|
+test "shortest path reports missing start and disconnected finals" {
+  let semiring = @moon-wfst.tropical_semiring()
+  let no_start = @moon-wfst.transducer_builder(semiring)
+  ignore(@moon-wfst.add_state(no_start))
+  assert_true(
+    @moon-wfst.shortest_path(
+      @moon-wfst.build_transducer(no_start),
+      @moon-wfst.tropical_path_order(),
+    )
+    is Err(@moon-wfst.NoStartState),
+  )
+
+  let builder = @moon-wfst.transducer_builder(semiring)
+  let start = @moon-wfst.add_state(builder)
+  let disconnected = @moon-wfst.add_state(builder)
+  ignore(@moon-wfst.set_start(builder, start))
+  ignore(
+    @moon-wfst.set_final(
+      builder,
+      disconnected,
+      @moon-wfst.tropical_cost(0).unwrap(),
+    ),
+  )
+  assert_true(
+    @moon-wfst.shortest_path(
+      @moon-wfst.build_transducer(builder),
+      @moon-wfst.tropical_path_order(),
+    )
+    is Err(@moon-wfst.NoAcceptingPath),
+  )
+}
+
+///|
+test "shortest path rejects negative weights before search" {
+  let integer_semiring : @moon-wfst.Semiring[Int] = {
+    zero: 999999,
+    one: 0,
+    plus: (left, right) => if left < right { left } else { right },
+    times: (left, right) => left + right,
+  }
+  let order = @moon-wfst.path_order(
+    (left, right) => {
+      if left < right {
+        -1
+      } else if left > right {
+        1
+      } else {
+        0
+      }
+    },
+    weight => weight >= 0,
+    weight => weight == 999999,
+  )
+  let builder = @moon-wfst.transducer_builder(integer_semiring)
+  let start = @moon-wfst.add_state(builder)
+  let disconnected = @moon-wfst.add_state(builder)
+  ignore(@moon-wfst.set_start(builder, start))
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      disconnected,
+      @moon-wfst.Label::Symbol("n"),
+      @moon-wfst.Label::Symbol("n"),
+      disconnected,
+      -1,
+    ),
+  )
+  assert_true(
+    @moon-wfst.shortest_path(@moon-wfst.build_transducer(builder), order)
+    is Err(@moon-wfst.NegativeWeight),
+  )
+}
+
+///|
+test "shortest path breaks equal costs by state id" {
+  let semiring = @moon-wfst.tropical_semiring()
+  let builder = @moon-wfst.transducer_builder(semiring)
+  let start = @moon-wfst.add_state(builder)
+  let first = @moon-wfst.add_state(builder)
+  let second = @moon-wfst.add_state(builder)
+  ignore(@moon-wfst.set_start(builder, start))
+  ignore(
+    @moon-wfst.set_final(builder, first, @moon-wfst.tropical_cost(0).unwrap()),
+  )
+  ignore(
+    @moon-wfst.set_final(builder, second, @moon-wfst.tropical_cost(0).unwrap()),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      start,
+      @moon-wfst.Label::Symbol("a"),
+      @moon-wfst.Label::Symbol("a"),
+      first,
+      @moon-wfst.tropical_cost(1).unwrap(),
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      start,
+      @moon-wfst.Label::Symbol("b"),
+      @moon-wfst.Label::Symbol("b"),
+      second,
+      @moon-wfst.tropical_cost(1).unwrap(),
+    ),
+  )
+  let path = @moon-wfst.shortest_path(
+    @moon-wfst.build_transducer(builder),
+    @moon-wfst.tropical_path_order(),
+  ).unwrap()
+  assert_eq(@moon-wfst.accepting_path_states(path)[1], first)
+}
