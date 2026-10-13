@@ -23,3 +23,9 @@ The ordered-weight API is only valid when its comparison is consistent with the 
 ## Resource and failure behavior
 
 State identifiers are dense and zero-based. Construction rejects negative or out-of-range state references before a graph is returned. Composition visits only reachable state pairs, but this may still grow as the product of the two state sets. The API has no hidden global state, file/network access, or implicit alphabet normalization.
+
+## Structural graph analysis
+
+`reachable_states` traverses from the declared start across every stored arc. `coaccessible_states` traverses the reverse graph from every state that has an explicitly stored final weight. Both are structural: arc labels and weights do not affect these sets, and an explicit semiring-zero final weight still marks a structurally final state. A missing start makes every state unreachable, but does not change coaccessibility.
+
+`trim` retains the intersection of those sets, which removes states unable to participate in any structurally start-to-final path. It preserves original state order while compacting identifiers and returns an original-to-new mapping. If no structurally accepting core exists, its graph has zero states and no start. Since arbitrary semiring values have no required equality operation, trim intentionally does not remove zero-weight arcs or zero-weight finals; callers needing semiring-aware pruning must supply that policy themselves.
