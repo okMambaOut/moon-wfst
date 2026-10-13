@@ -39,3 +39,7 @@ These constructors use the left operand's semiring for synthetic branch arcs. Th
 ## Acyclic ordering
 
 `topological_order` applies Kahn's algorithm to every graph state, not only states reachable from the declared start. Parallel arcs contribute independently to indegree and are decremented independently. The result is deterministic for an unchanged graph: initial zero-indegree states are queued in ascending identifier order, then newly ready states are appended in outgoing-arc insertion order. Cycles, including self-loops and disconnected cyclic components, return `GraphHasCycle`; an empty graph returns an empty order.
+
+## Exact relation membership
+
+`accepts_pair` explores the finite product `(graph state, input position, output position)` and returns whether a path consumes both token arrays completely and ends at an explicit final state. Each side consumes independently: epsilon on one side does not imply epsilon on the other. A caller-supplied `is_zero` predicate excludes semiring-zero arcs and finals; all other weight values are ignored, so this query recognizes membership but does not aggregate weights or return a witness. The predicate must be deterministic and side-effect free. The implementation memoizes the product space, using `O(V × (|input| + 1) × (|output| + 1))` memory, and terminates even with epsilon/epsilon cycles. A graph without a start returns `NoStartState`.
