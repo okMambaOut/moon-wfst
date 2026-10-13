@@ -667,3 +667,110 @@ test "negative terminal costs are rejected" {
     is Err(@moon-wfst.NegativeWeight),
   )
 }
+
+///|
+test "reachability and coaccessibility distinguish dead graph regions" {
+  let ops = @moon-wfst.boolean_semiring()
+  let builder = @moon-wfst.transducer_builder(ops)
+  let start = @moon-wfst.add_state(builder)
+  let middle = @moon-wfst.add_state(builder)
+  let final_state = @moon-wfst.add_state(builder)
+  let unreachable_final = @moon-wfst.add_state(builder)
+  let dead_end = @moon-wfst.add_state(builder)
+  ignore(@moon-wfst.set_start(builder, start))
+  ignore(@moon-wfst.set_final(builder, final_state, true))
+  ignore(@moon-wfst.set_final(builder, unreachable_final, true))
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      start,
+      @moon-wfst.Label::Epsilon,
+      @moon-wfst.Label::Epsilon,
+      middle,
+      true,
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      middle,
+      @moon-wfst.Label::Symbol("a"),
+      @moon-wfst.Label::Symbol("a"),
+      final_state,
+      true,
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      start,
+      @moon-wfst.Label::Symbol("d"),
+      @moon-wfst.Label::Symbol("d"),
+      dead_end,
+      true,
+    ),
+  )
+  let graph = @moon-wfst.build_transducer(builder)
+  assert_eq(@moon-wfst.reachable_states(graph), [true, true, true, false, true])
+  assert_eq(@moon-wfst.coaccessible_states(graph), [
+    true, true, true, true, false,
+  ])
+  let result = @moon-wfst.trim(graph)
+  let compacted = @moon-wfst.trim_result_transducer(result)
+  assert_eq(@moon-wfst.transducer_state_count(compacted), 3)
+  assert_eq(@moon-wfst.trim_result_state_mapping(result), [
+    Some(0),
+    Some(1),
+    Some(2),
+    None,
+    None,
+  ])
+  assert_eq(@moon-wfst.transducer_start_state(compacted), Some(0))
+  assert_eq(
+    @moon-wfst.transducer_final_weight(compacted, 2).unwrap(),
+    Some(true),
+  )
+  assert_eq(@moon-wfst.transducer_arcs_from(compacted, 0).unwrap().length(), 1)
+}
+
+///|
+test "trim returns an empty graph when no final state is reachable" {
+  let builder = @moon-wfst.transducer_builder(@moon-wfst.boolean_semiring())
+  let first = @moon-wfst.add_state(builder)
+  let second = @moon-wfst.add_state(builder)
+  ignore(@moon-wfst.set_start(builder, first))
+  ignore(@moon-wfst.set_final(builder, second, true))
+  let result = @moon-wfst.trim(@moon-wfst.build_transducer(builder))
+  let compacted = @moon-wfst.trim_result_transducer(result)
+  assert_eq(@moon-wfst.transducer_state_count(compacted), 0)
+  assert_eq(@moon-wfst.transducer_start_state(compacted), None)
+  assert_eq(@moon-wfst.trim_result_state_mapping(result), [None, None])
+}
+
+///|
+test "coaccessibility retains explicitly zero-valued final weights" {
+  let builder = @moon-wfst.transducer_builder(@moon-wfst.boolean_semiring())
+  let start = @moon-wfst.add_state(builder)
+  let end = @moon-wfst.add_state(builder)
+  ignore(@moon-wfst.set_start(builder, start))
+  ignore(@moon-wfst.set_final(builder, end, false))
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      start,
+      @moon-wfst.Label::Epsilon,
+      @moon-wfst.Label::Epsilon,
+      end,
+      false,
+    ),
+  )
+  let graph = @moon-wfst.build_transducer(builder)
+  assert_eq(@moon-wfst.coaccessible_states(graph), [true, true])
+  let compacted = @moon-wfst.trim(graph)
+  assert_eq(
+    @moon-wfst.transducer_state_count(
+      @moon-wfst.trim_result_transducer(compacted),
+    ),
+    2,
+  )
+}
