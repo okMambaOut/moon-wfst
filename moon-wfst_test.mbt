@@ -1107,3 +1107,163 @@ test "relation membership requires a start and exact complete tokens" {
     Ok(false),
   )
 }
+
+///|
+test "DAG k-best paths rank final weights and preserve equal-cost order" {
+  let semiring = @moon-wfst.tropical_semiring()
+  let builder = @moon-wfst.transducer_builder(semiring)
+  let start = @moon-wfst.add_state(builder)
+  let left = @moon-wfst.add_state(builder)
+  let right = @moon-wfst.add_state(builder)
+  let finish = @moon-wfst.add_state(builder)
+  ignore(@moon-wfst.set_start(builder, start))
+  ignore(
+    @moon-wfst.set_final(builder, finish, @moon-wfst.tropical_cost(1).unwrap()),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      start,
+      @moon-wfst.Label::Symbol("a"),
+      @moon-wfst.Label::Symbol("a"),
+      left,
+      @moon-wfst.tropical_cost(1).unwrap(),
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      start,
+      @moon-wfst.Label::Symbol("b"),
+      @moon-wfst.Label::Symbol("b"),
+      right,
+      @moon-wfst.tropical_cost(2).unwrap(),
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      left,
+      @moon-wfst.Label::Symbol("x"),
+      @moon-wfst.Label::Symbol("x"),
+      finish,
+      @moon-wfst.tropical_cost(1).unwrap(),
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      right,
+      @moon-wfst.Label::Symbol("y"),
+      @moon-wfst.Label::Symbol("y"),
+      finish,
+      @moon-wfst.tropical_cost(1).unwrap(),
+    ),
+  )
+  let graph = @moon-wfst.build_transducer(builder)
+  let paths = @moon-wfst.shortest_paths_in_dag(
+    graph,
+    @moon-wfst.tropical_path_order(),
+    5,
+  ).unwrap()
+  assert_eq(paths.length(), 2)
+  assert_eq(
+    tropical_value_of(@moon-wfst.accepting_path_total_weight(paths[0])),
+    3,
+  )
+  assert_eq(
+    tropical_value_of(@moon-wfst.accepting_path_total_weight(paths[1])),
+    4,
+  )
+  assert_eq(@moon-wfst.accepting_path_states(paths[0]), [0, 1, 3])
+  assert_true(
+    @moon-wfst.shortest_paths_in_dag(graph, @moon-wfst.tropical_path_order(), 0)
+    is Err(@moon-wfst.InvalidPathLimit(0)),
+  )
+}
+
+///|
+test "DAG k-best accepts negative arc costs without applying Dijkstra" {
+  let operations : @moon-wfst.Semiring[Int] = {
+    zero: 999,
+    one: 0,
+    plus: (left, right) => if left < right { left } else { right },
+    times: (left, right) => left + right,
+  }
+  let ordering = @moon-wfst.path_order(
+    (left, right) => {
+      if left < right {
+        -1
+      } else if left > right {
+        1
+      } else {
+        0
+      }
+    },
+    _ => false,
+    weight => weight == 999,
+  )
+  let builder = @moon-wfst.transducer_builder(operations)
+  let start = @moon-wfst.add_state(builder)
+  let finish = @moon-wfst.add_state(builder)
+  ignore(@moon-wfst.set_start(builder, start))
+  ignore(@moon-wfst.set_final(builder, finish, 0))
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      start,
+      @moon-wfst.Label::Symbol("n"),
+      @moon-wfst.Label::Symbol("n"),
+      finish,
+      -4,
+    ),
+  )
+  let paths = @moon-wfst.shortest_paths_in_dag(
+    @moon-wfst.build_transducer(builder),
+    ordering,
+    2,
+  ).unwrap()
+  assert_eq(paths.length(), 1)
+  assert_eq(@moon-wfst.accepting_path_total_weight(paths[0]), -4)
+}
+
+///|
+test "DAG k-best reports cycle before producing partial results" {
+  let builder = @moon-wfst.transducer_builder(@moon-wfst.boolean_semiring())
+  let start = @moon-wfst.add_state(builder)
+  let final_state = @moon-wfst.add_state(builder)
+  ignore(@moon-wfst.set_start(builder, start))
+  ignore(@moon-wfst.set_final(builder, final_state, true))
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      start,
+      @moon-wfst.Label::Symbol("a"),
+      @moon-wfst.Label::Symbol("a"),
+      final_state,
+      true,
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      final_state,
+      @moon-wfst.Label::Epsilon,
+      @moon-wfst.Label::Epsilon,
+      final_state,
+      true,
+    ),
+  )
+  assert_true(
+    @moon-wfst.shortest_paths_in_dag(
+      @moon-wfst.build_transducer(builder),
+      @moon-wfst.path_order(
+        (a, b) => if a < b { -1 } else if a > b { 1 } else { 0 },
+        _ => true,
+        _ => false,
+      ),
+      1,
+    )
+    is Err(@moon-wfst.GraphHasCycle),
+  )
+}

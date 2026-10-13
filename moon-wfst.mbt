@@ -31,6 +31,7 @@ pub(all) enum WfstError {
   NoStartState
   UnsupportedEpsilonComposition
   GraphHasCycle
+  InvalidPathLimit(Int)
   NegativeWeight
   WeightOutOfRange
   NoAcceptingPath
