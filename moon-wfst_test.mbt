@@ -193,3 +193,148 @@ test "epsilon scan examines input and output labels" {
     @moon-wfst.transducer_has_epsilon(@moon-wfst.project_input(graph)),
   )
 }
+
+///|
+test "composition joins labels and multiplies arc and final weights" {
+  let tropical = @moon-wfst.tropical_semiring()
+  let left_builder = @moon-wfst.transducer_builder(tropical)
+  let left_start = @moon-wfst.add_state(left_builder)
+  let left_final = @moon-wfst.add_state(left_builder)
+  ignore(@moon-wfst.set_start(left_builder, left_start))
+  ignore(
+    @moon-wfst.set_final(
+      left_builder,
+      left_final,
+      @moon-wfst.tropical_cost(4).unwrap(),
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      left_builder,
+      left_start,
+      @moon-wfst.Label::Symbol("a"),
+      @moon-wfst.Label::Symbol("x"),
+      left_final,
+      @moon-wfst.tropical_cost(2).unwrap(),
+    ),
+  )
+  let right_builder = @moon-wfst.transducer_builder(tropical)
+  let right_start = @moon-wfst.add_state(right_builder)
+  let right_final = @moon-wfst.add_state(right_builder)
+  ignore(@moon-wfst.set_start(right_builder, right_start))
+  ignore(
+    @moon-wfst.set_final(
+      right_builder,
+      right_final,
+      @moon-wfst.tropical_cost(5).unwrap(),
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      right_builder,
+      right_start,
+      @moon-wfst.Label::Symbol("x"),
+      @moon-wfst.Label::Symbol("b"),
+      right_final,
+      @moon-wfst.tropical_cost(3).unwrap(),
+    ),
+  )
+  let composed = @moon-wfst.compose(
+    @moon-wfst.build_transducer(left_builder),
+    @moon-wfst.build_transducer(right_builder),
+  ).unwrap()
+  assert_eq(@moon-wfst.transducer_state_count(composed), 2)
+  let arc = @moon-wfst.transducer_arcs_from(composed, 0).unwrap()[0]
+  assert_eq(arc.input, @moon-wfst.Label::Symbol("a"))
+  assert_eq(arc.output, @moon-wfst.Label::Symbol("b"))
+  assert_eq(@moon-wfst.tropical_value(arc.weight), Some(5))
+  assert_eq(
+    @moon-wfst.tropical_value(
+      @moon-wfst.transducer_final_weight(composed, 1).unwrap().unwrap(),
+    ),
+    Some(9),
+  )
+}
+
+///|
+test "composition keeps only reachable matching state pairs" {
+  let ops = @moon-wfst.boolean_semiring()
+  let left_builder = @moon-wfst.transducer_builder(ops)
+  let left_start = @moon-wfst.add_state(left_builder)
+  let left_match = @moon-wfst.add_state(left_builder)
+  ignore(@moon-wfst.add_state(left_builder))
+  ignore(@moon-wfst.set_start(left_builder, left_start))
+  ignore(
+    @moon-wfst.add_arc(
+      left_builder,
+      left_start,
+      @moon-wfst.Label::Symbol("a"),
+      @moon-wfst.Label::Symbol("join"),
+      left_match,
+      true,
+    ),
+  )
+  let right_builder = @moon-wfst.transducer_builder(ops)
+  let right_start = @moon-wfst.add_state(right_builder)
+  let right_match = @moon-wfst.add_state(right_builder)
+  ignore(@moon-wfst.add_state(right_builder))
+  ignore(@moon-wfst.set_start(right_builder, right_start))
+  ignore(
+    @moon-wfst.add_arc(
+      right_builder,
+      right_start,
+      @moon-wfst.Label::Symbol("join"),
+      @moon-wfst.Label::Symbol("b"),
+      right_match,
+      true,
+    ),
+  )
+  let result = @moon-wfst.compose(
+    @moon-wfst.build_transducer(left_builder),
+    @moon-wfst.build_transducer(right_builder),
+  ).unwrap()
+  assert_eq(@moon-wfst.transducer_state_count(result), 2)
+  assert_eq(@moon-wfst.transducer_arcs_from(result, 0).unwrap().length(), 1)
+}
+
+///|
+test "epsilon composition is rejected on either label side" {
+  let ops = @moon-wfst.boolean_semiring()
+  let left_builder = @moon-wfst.transducer_builder(ops)
+  let left_state = @moon-wfst.add_state(left_builder)
+  ignore(@moon-wfst.set_start(left_builder, left_state))
+  ignore(
+    @moon-wfst.add_arc(
+      left_builder,
+      left_state,
+      @moon-wfst.Label::Symbol("a"),
+      @moon-wfst.Label::Epsilon,
+      left_state,
+      true,
+    ),
+  )
+  let right_builder = @moon-wfst.transducer_builder(ops)
+  let right_state = @moon-wfst.add_state(right_builder)
+  ignore(@moon-wfst.set_start(right_builder, right_state))
+  let result = @moon-wfst.compose(
+    @moon-wfst.build_transducer(left_builder),
+    @moon-wfst.build_transducer(right_builder),
+  )
+  assert_true(result is Err(@moon-wfst.UnsupportedEpsilonComposition))
+}
+
+///|
+test "composition requires explicit starts" {
+  let ops = @moon-wfst.boolean_semiring()
+  let left_builder = @moon-wfst.transducer_builder(ops)
+  ignore(@moon-wfst.add_state(left_builder))
+  let right_builder = @moon-wfst.transducer_builder(ops)
+  ignore(@moon-wfst.add_state(right_builder))
+  assert_true(
+    @moon-wfst.compose(
+      @moon-wfst.build_transducer(left_builder),
+      @moon-wfst.build_transducer(right_builder),
+    )
+    is Err(@moon-wfst.NoStartState),
+  )
+}
