@@ -1,0 +1,5 @@
+import {
+  "okMambaOut/moon-wfst" @wfst,
+}
+
+pkgtype(kind: "executable")
