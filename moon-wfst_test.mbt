@@ -134,3 +134,62 @@ test "built graph is a stable snapshot and exposes copied arcs" {
     3,
   )
 }
+
+///|
+test "projection and inversion preserve graph structure and weights" {
+  let builder = @moon-wfst.transducer_builder(@moon-wfst.boolean_semiring())
+  let start = @moon-wfst.add_state(builder)
+  let final_id = @moon-wfst.add_state(builder)
+  ignore(@moon-wfst.set_start(builder, start))
+  ignore(@moon-wfst.set_final(builder, final_id, true))
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      start,
+      @moon-wfst.Label::Symbol("read"),
+      @moon-wfst.Label::Symbol("lemma"),
+      final_id,
+      true,
+    ),
+  )
+  let original = @moon-wfst.build_transducer(builder)
+  let input_projection = @moon-wfst.project_input(original)
+  let output_projection = @moon-wfst.project_output(original)
+  let reversed = @moon-wfst.invert(original)
+  let input_arc = @moon-wfst.transducer_arcs_from(input_projection, 0).unwrap()[0]
+  let output_arc = @moon-wfst.transducer_arcs_from(output_projection, 0).unwrap()[0]
+  let reverse_arc = @moon-wfst.transducer_arcs_from(reversed, 0).unwrap()[0]
+  assert_eq(input_arc.input, @moon-wfst.Label::Symbol("read"))
+  assert_eq(input_arc.output, @moon-wfst.Label::Symbol("read"))
+  assert_eq(output_arc.input, @moon-wfst.Label::Symbol("lemma"))
+  assert_eq(output_arc.output, @moon-wfst.Label::Symbol("lemma"))
+  assert_eq(reverse_arc.input, @moon-wfst.Label::Symbol("lemma"))
+  assert_eq(reverse_arc.output, @moon-wfst.Label::Symbol("read"))
+  assert_eq(reverse_arc.weight, true)
+  assert_eq(
+    @moon-wfst.transducer_final_weight(reversed, final_id).unwrap(),
+    Some(true),
+  )
+}
+
+///|
+test "epsilon scan examines input and output labels" {
+  let builder = @moon-wfst.transducer_builder(@moon-wfst.boolean_semiring())
+  let from = @moon-wfst.add_state(builder)
+  let to = @moon-wfst.add_state(builder)
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      from,
+      @moon-wfst.Label::Epsilon,
+      @moon-wfst.Label::Symbol("x"),
+      to,
+      true,
+    ),
+  )
+  let graph = @moon-wfst.build_transducer(builder)
+  assert_true(@moon-wfst.transducer_has_epsilon(graph))
+  assert_true(
+    @moon-wfst.transducer_has_epsilon(@moon-wfst.project_input(graph)),
+  )
+}
