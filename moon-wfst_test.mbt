@@ -524,3 +524,146 @@ test "shortest path breaks equal costs by state id" {
   ).unwrap()
   assert_eq(@moon-wfst.accepting_path_states(path)[1], first)
 }
+
+///|
+test "clearing a final state and invalid reads remain typed" {
+  let builder = @moon-wfst.transducer_builder(@moon-wfst.boolean_semiring())
+  let only = @moon-wfst.add_state(builder)
+  assert_true(@moon-wfst.set_final(builder, only, true) is Ok(_))
+  assert_eq(
+    @moon-wfst.transducer_final_weight(
+      @moon-wfst.build_transducer(builder),
+      only,
+    ).unwrap(),
+    Some(true),
+  )
+  assert_true(@moon-wfst.clear_final(builder, only) is Ok(_))
+  let graph = @moon-wfst.build_transducer(builder)
+  assert_eq(@moon-wfst.transducer_final_weight(graph, only).unwrap(), None)
+  assert_true(
+    @moon-wfst.transducer_final_weight(graph, 2)
+    is Err(@moon-wfst.InvalidStateId(2)),
+  )
+  assert_true(
+    @moon-wfst.transducer_arcs_from(graph, -1)
+    is Err(@moon-wfst.InvalidStateId(-1)),
+  )
+}
+
+///|
+test "mutating an outgoing-arc copy does not change the graph" {
+  let builder = @moon-wfst.transducer_builder(@moon-wfst.boolean_semiring())
+  let from = @moon-wfst.add_state(builder)
+  let to = @moon-wfst.add_state(builder)
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      from,
+      @moon-wfst.Label::Symbol("a"),
+      @moon-wfst.Label::Symbol("b"),
+      to,
+      true,
+    ),
+  )
+  let graph = @moon-wfst.build_transducer(builder)
+  let copied = @moon-wfst.transducer_arcs_from(graph, from).unwrap()
+  copied.push({
+    input: @moon-wfst.Label::Symbol("c"),
+    output: @moon-wfst.Label::Symbol("d"),
+    destination: to,
+    weight: true,
+  })
+  assert_eq(copied.length(), 2)
+  assert_eq(@moon-wfst.transducer_arcs_from(graph, from).unwrap().length(), 1)
+}
+
+///|
+test "composition with no matching intermediate symbols is empty" {
+  let ops = @moon-wfst.boolean_semiring()
+  let left_builder = @moon-wfst.transducer_builder(ops)
+  let left_start = @moon-wfst.add_state(left_builder)
+  let left_end = @moon-wfst.add_state(left_builder)
+  ignore(@moon-wfst.set_start(left_builder, left_start))
+  ignore(@moon-wfst.set_final(left_builder, left_end, true))
+  ignore(
+    @moon-wfst.add_arc(
+      left_builder,
+      left_start,
+      @moon-wfst.Label::Symbol("a"),
+      @moon-wfst.Label::Symbol("x"),
+      left_end,
+      true,
+    ),
+  )
+  let right_builder = @moon-wfst.transducer_builder(ops)
+  let right_start = @moon-wfst.add_state(right_builder)
+  let right_end = @moon-wfst.add_state(right_builder)
+  ignore(@moon-wfst.set_start(right_builder, right_start))
+  ignore(@moon-wfst.set_final(right_builder, right_end, true))
+  ignore(
+    @moon-wfst.add_arc(
+      right_builder,
+      right_start,
+      @moon-wfst.Label::Symbol("different"),
+      @moon-wfst.Label::Symbol("b"),
+      right_end,
+      true,
+    ),
+  )
+  let result = @moon-wfst.compose(
+    @moon-wfst.build_transducer(left_builder),
+    @moon-wfst.build_transducer(right_builder),
+  ).unwrap()
+  assert_eq(@moon-wfst.transducer_state_count(result), 1)
+  assert_eq(@moon-wfst.transducer_arcs_from(result, 0).unwrap().length(), 0)
+  assert_eq(@moon-wfst.transducer_final_weight(result, 0).unwrap(), None)
+}
+
+///|
+test "a zero-arc accepting path includes only its final weight" {
+  let semiring = @moon-wfst.tropical_semiring()
+  let builder = @moon-wfst.transducer_builder(semiring)
+  let start = @moon-wfst.add_state(builder)
+  ignore(@moon-wfst.set_start(builder, start))
+  ignore(
+    @moon-wfst.set_final(builder, start, @moon-wfst.tropical_cost(6).unwrap()),
+  )
+  let path = @moon-wfst.shortest_path(
+    @moon-wfst.build_transducer(builder),
+    @moon-wfst.tropical_path_order(),
+  ).unwrap()
+  assert_eq(@moon-wfst.accepting_path_states(path).length(), 1)
+  assert_eq(@moon-wfst.accepting_path_steps(path).length(), 0)
+  assert_eq(tropical_value_of(@moon-wfst.accepting_path_total_weight(path)), 6)
+}
+
+///|
+test "negative terminal costs are rejected" {
+  let operations : @moon-wfst.Semiring[Int] = {
+    zero: 999,
+    one: 0,
+    plus: (left, right) => if left < right { left } else { right },
+    times: (left, right) => left + right,
+  }
+  let ordering = @moon-wfst.path_order(
+    (left, right) => {
+      if left < right {
+        -1
+      } else if left > right {
+        1
+      } else {
+        0
+      }
+    },
+    weight => weight >= 0,
+    weight => weight == 999,
+  )
+  let builder = @moon-wfst.transducer_builder(operations)
+  let state = @moon-wfst.add_state(builder)
+  ignore(@moon-wfst.set_start(builder, state))
+  ignore(@moon-wfst.set_final(builder, state, -2))
+  assert_true(
+    @moon-wfst.shortest_path(@moon-wfst.build_transducer(builder), ordering)
+    is Err(@moon-wfst.NegativeWeight),
+  )
+}
