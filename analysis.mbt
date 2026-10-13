@@ -95,13 +95,12 @@ pub fn[W] trim_result_state_mapping(result : TrimResult[W]) -> Array[Int?] {
 /// graph with no start state. The operation is structural: it does not inspect
 /// label matches or compare generic weights against semiring zero.
 pub fn[W] trim(transducer : Transducer[W]) -> TrimResult[W] {
-  let reached = reachable_states(transducer)
-  let accessible = coaccessible_states(transducer)
+  let core = accepting_core_states(transducer)
   let keep : Array[Bool] = []
   let mapping : Array[Int?] = []
   let mut retained_count = 0
   for state in 0..<transducer.outgoing.length() {
-    let retained = reached[state] && accessible[state]
+    let retained = core[state]
     keep.push(retained)
     if retained {
       mapping.push(Some(retained_count))
@@ -191,4 +190,63 @@ pub fn[W] topological_order(
   } else {
     Err(WfstError::GraphHasCycle)
   }
+}
+
+///|
+/// Compute structural reachability from an explicit root state rather than the
+/// graph's declared start. This is useful when inspecting components or when
+/// an algorithm chooses its own entry state. Every stored arc is traversed.
+pub fn[W] reachable_states_from(
+  transducer : Transducer[W],
+  root : Int,
+) -> Result[Array[Bool], WfstError] {
+  let count = transducer.outgoing.length()
+  if root < 0 || root >= count {
+    return Err(WfstError::InvalidStateId(root))
+  }
+  let reached : Array[Bool] = []
+  for _ in 0..<count {
+    reached.push(false)
+  }
+  reached[root] = true
+  let queue : Array[Int] = [root]
+  let mut cursor = 0
+  while cursor < queue.length() {
+    let state = queue[cursor]
+    for arc in transducer.outgoing[state] {
+      if !reached[arc.destination] {
+        reached[arc.destination] = true
+        queue.push(arc.destination)
+      }
+    }
+    cursor = cursor + 1
+  }
+  Ok(reached)
+}
+
+///|
+/// Return the states lying on at least one structural path from the declared
+/// start to an explicitly final state. Weights and labels are not interpreted.
+pub fn[W] accepting_core_states(transducer : Transducer[W]) -> Array[Bool] {
+  let reached = reachable_states(transducer)
+  let accessible = coaccessible_states(transducer)
+  let core : Array[Bool] = []
+  for state in 0..<transducer.outgoing.length() {
+    core.push(reached[state] && accessible[state])
+  }
+  core
+}
+
+///|
+/// Report whether every state belongs to the graph's structural accepting
+/// core. The empty graph is trimmed; a graph without a start and with states is
+/// not. This check ignores labels and semiring-zero values.
+pub fn[W] transducer_is_trimmed(transducer : Transducer[W]) -> Bool {
+  let core = accepting_core_states(transducer)
+  for state in core {
+    if !state {
+      return false
+    }
+  }
+  true
 }

@@ -1267,3 +1267,173 @@ test "DAG k-best reports cycle before producing partial results" {
     is Err(@moon-wfst.GraphHasCycle),
   )
 }
+
+///|
+test "graph inspection preserves incoming arc order and parallel arcs" {
+  let builder = @moon-wfst.transducer_builder(@moon-wfst.boolean_semiring())
+  let first = @moon-wfst.add_state(builder)
+  let second = @moon-wfst.add_state(builder)
+  let destination = @moon-wfst.add_state(builder)
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      second,
+      @moon-wfst.Label::Symbol("b"),
+      @moon-wfst.Label::Symbol("b"),
+      destination,
+      true,
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      first,
+      @moon-wfst.Label::Symbol("a"),
+      @moon-wfst.Label::Symbol("a"),
+      destination,
+      true,
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      first,
+      @moon-wfst.Label::Symbol("again"),
+      @moon-wfst.Label::Symbol("again"),
+      destination,
+      true,
+    ),
+  )
+  let graph = @moon-wfst.build_transducer(builder)
+  let incoming = @moon-wfst.transducer_incoming_arcs(graph, destination).unwrap()
+  assert_eq(incoming.length(), 3)
+  assert_eq(incoming[0].0, first)
+  assert_eq(incoming[1].0, first)
+  assert_eq(incoming[2].0, second)
+  assert_true(
+    @moon-wfst.transducer_incoming_arcs(graph, 4)
+    is Err(@moon-wfst.InvalidStateId(4)),
+  )
+}
+
+///|
+test "graph statistics include all states and independently count epsilons" {
+  let builder = @moon-wfst.transducer_builder(@moon-wfst.boolean_semiring())
+  let start = @moon-wfst.add_state(builder)
+  let final_state = @moon-wfst.add_state(builder)
+  let orphan = @moon-wfst.add_state(builder)
+  ignore(@moon-wfst.set_start(builder, start))
+  ignore(@moon-wfst.set_final(builder, final_state, false))
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      start,
+      @moon-wfst.Label::Epsilon,
+      @moon-wfst.Label::Symbol("x"),
+      final_state,
+      true,
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      start,
+      @moon-wfst.Label::Epsilon,
+      @moon-wfst.Label::Epsilon,
+      orphan,
+      true,
+    ),
+  )
+  let stats = @moon-wfst.transducer_stats(@moon-wfst.build_transducer(builder))
+  assert_eq(stats.state_count, 3)
+  assert_eq(stats.arc_count, 2)
+  assert_eq(stats.epsilon_input_arc_count, 2)
+  assert_eq(stats.epsilon_output_arc_count, 1)
+  assert_eq(stats.final_state_count, 1)
+  assert_eq(stats.max_out_degree, 2)
+  assert_eq(stats.reachable_state_count, 3)
+  assert_eq(stats.coaccessible_state_count, 2)
+  assert_true(stats.has_start)
+}
+
+///|
+test "empty graph statistics use zero degrees and no reachability" {
+  let builder = @moon-wfst.transducer_builder(@moon-wfst.boolean_semiring())
+  let stats = @moon-wfst.transducer_stats(@moon-wfst.build_transducer(builder))
+  assert_eq(stats.state_count, 0)
+  assert_eq(stats.arc_count, 0)
+  assert_eq(stats.max_out_degree, 0)
+  assert_eq(stats.reachable_state_count, 0)
+  assert_eq(stats.coaccessible_state_count, 0)
+  assert_true(!stats.has_start)
+}
+
+///|
+test "explicit-root reachability is independent from the graph start" {
+  let builder = @moon-wfst.transducer_builder(@moon-wfst.boolean_semiring())
+  let declared = @moon-wfst.add_state(builder)
+  let component = @moon-wfst.add_state(builder)
+  let next = @moon-wfst.add_state(builder)
+  ignore(@moon-wfst.set_start(builder, declared))
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      component,
+      @moon-wfst.Label::Symbol("x"),
+      @moon-wfst.Label::Symbol("x"),
+      next,
+      true,
+    ),
+  )
+  let graph = @moon-wfst.build_transducer(builder)
+  assert_eq(@moon-wfst.reachable_states_from(graph, component).unwrap(), [
+    false, true, true,
+  ])
+  assert_true(
+    @moon-wfst.reachable_states_from(graph, -1)
+    is Err(@moon-wfst.InvalidStateId(-1)),
+  )
+  assert_eq(@moon-wfst.reachable_states(graph), [true, false, false])
+}
+
+///|
+test "accepting core agrees with trim and identifies already trimmed graphs" {
+  let builder = @moon-wfst.transducer_builder(@moon-wfst.boolean_semiring())
+  let start = @moon-wfst.add_state(builder)
+  let finish = @moon-wfst.add_state(builder)
+  let dead = @moon-wfst.add_state(builder)
+  ignore(@moon-wfst.set_start(builder, start))
+  ignore(@moon-wfst.set_final(builder, finish, true))
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      start,
+      @moon-wfst.Label::Symbol("a"),
+      @moon-wfst.Label::Symbol("a"),
+      finish,
+      true,
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      start,
+      @moon-wfst.Label::Symbol("d"),
+      @moon-wfst.Label::Symbol("d"),
+      dead,
+      true,
+    ),
+  )
+  let graph = @moon-wfst.build_transducer(builder)
+  assert_eq(@moon-wfst.accepting_core_states(graph), [true, true, false])
+  assert_true(!@moon-wfst.transducer_is_trimmed(graph))
+  assert_true(
+    @moon-wfst.transducer_is_trimmed(
+      @moon-wfst.trim_result_transducer(@moon-wfst.trim(graph)),
+    ),
+  )
+  let empty = @moon-wfst.transducer_builder(@moon-wfst.boolean_semiring())
+  assert_true(
+    @moon-wfst.transducer_is_trimmed(@moon-wfst.build_transducer(empty)),
+  )
+}

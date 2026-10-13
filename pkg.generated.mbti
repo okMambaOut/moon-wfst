@@ -6,6 +6,8 @@ import {
 }
 
 // Values
+pub fn[W] accepting_core_states(Transducer[W]) -> Array[Bool]
+
 pub fn[W] accepting_path_final_weight(AcceptingPath[W]) -> W
 
 pub fn[W] accepting_path_states(AcceptingPath[W]) -> Array[Int]
@@ -44,6 +46,8 @@ pub fn[W] project_output(Transducer[W]) -> Transducer[W]
 
 pub fn[W] reachable_states(Transducer[W]) -> Array[Bool]
 
+pub fn[W] reachable_states_from(Transducer[W], Int) -> Result[Array[Bool], WfstError]
+
 pub fn[W] semiring_one(Semiring[W]) -> W
 
 pub fn[W] semiring_plus(Semiring[W], W, W) -> W
@@ -70,11 +74,17 @@ pub fn[W] transducer_final_weight(Transducer[W], Int) -> Result[W?, WfstError]
 
 pub fn[W] transducer_has_epsilon(Transducer[W]) -> Bool
 
+pub fn[W] transducer_incoming_arcs(Transducer[W], Int) -> Result[Array[(Int, Arc[W])], WfstError]
+
+pub fn[W] transducer_is_trimmed(Transducer[W]) -> Bool
+
 pub fn[W] transducer_semiring(Transducer[W]) -> Semiring[W]
 
 pub fn[W] transducer_start_state(Transducer[W]) -> Int?
 
 pub fn[W] transducer_state_count(Transducer[W]) -> Int
+
+pub fn[W] transducer_stats(Transducer[W]) -> TransducerStats
 
 pub fn[W] trim(Transducer[W]) -> TrimResult[W]
 
@@ -154,6 +164,20 @@ pub struct TransducerBuilder[W] {
   final_weights : Array[W?]
   mut start : Int?
 }
+
+pub(all) struct TransducerStats {
+  state_count : Int
+  arc_count : Int
+  epsilon_input_arc_count : Int
+  epsilon_output_arc_count : Int
+  final_state_count : Int
+  max_out_degree : Int
+  reachable_state_count : Int
+  coaccessible_state_count : Int
+  has_start : Bool
+} derive(Eq)
+pub fn TransducerStats::equal(Self, Self) -> Bool
+pub fn TransducerStats::not_equal(Self, Self) -> Bool
 
 pub struct TrimResult[W] {
   graph : Transducer[W]
