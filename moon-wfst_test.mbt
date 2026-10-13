@@ -994,3 +994,116 @@ test "empty graph has empty topological order" {
     [],
   )
 }
+
+///|
+test "relation membership handles independent epsilons and epsilon cycles" {
+  let semiring = @moon-wfst.boolean_semiring()
+  let builder = @moon-wfst.transducer_builder(semiring)
+  let start = @moon-wfst.add_state(builder)
+  let middle = @moon-wfst.add_state(builder)
+  let finish = @moon-wfst.add_state(builder)
+  ignore(@moon-wfst.set_start(builder, start))
+  ignore(@moon-wfst.set_final(builder, finish, true))
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      start,
+      @moon-wfst.Label::Epsilon,
+      @moon-wfst.Label::Epsilon,
+      start,
+      true,
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      start,
+      @moon-wfst.Label::Symbol("read"),
+      @moon-wfst.Label::Epsilon,
+      middle,
+      true,
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      middle,
+      @moon-wfst.Label::Epsilon,
+      @moon-wfst.Label::Symbol("emit"),
+      finish,
+      true,
+    ),
+  )
+  let graph = @moon-wfst.build_transducer(builder)
+  assert_eq(
+    @moon-wfst.accepts_pair(graph, ["read"], ["emit"], weight => !weight),
+    Ok(true),
+  )
+  assert_eq(
+    @moon-wfst.accepts_pair(graph, ["read"], [], weight => !weight),
+    Ok(false),
+  )
+  assert_eq(
+    @moon-wfst.accepts_pair(graph, [], ["emit"], weight => !weight),
+    Ok(false),
+  )
+}
+
+///|
+test "relation membership respects zero arc and final predicates" {
+  let semiring = @moon-wfst.boolean_semiring()
+  let builder = @moon-wfst.transducer_builder(semiring)
+  let start = @moon-wfst.add_state(builder)
+  let finish = @moon-wfst.add_state(builder)
+  ignore(@moon-wfst.set_start(builder, start))
+  ignore(@moon-wfst.set_final(builder, finish, true))
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      start,
+      @moon-wfst.Label::Symbol("a"),
+      @moon-wfst.Label::Symbol("b"),
+      finish,
+      false,
+    ),
+  )
+  let graph = @moon-wfst.build_transducer(builder)
+  assert_eq(
+    @moon-wfst.accepts_pair(graph, ["a"], ["b"], weight => !weight),
+    Ok(false),
+  )
+  let positive_builder = @moon-wfst.transducer_builder(semiring)
+  let only = @moon-wfst.add_state(positive_builder)
+  ignore(@moon-wfst.set_start(positive_builder, only))
+  ignore(@moon-wfst.set_final(positive_builder, only, false))
+  let explicit_zero_final = @moon-wfst.build_transducer(positive_builder)
+  assert_eq(
+    @moon-wfst.accepts_pair(explicit_zero_final, [], [], weight => !weight),
+    Ok(false),
+  )
+}
+
+///|
+test "relation membership requires a start and exact complete tokens" {
+  let builder = @moon-wfst.transducer_builder(@moon-wfst.boolean_semiring())
+  let state = @moon-wfst.add_state(builder)
+  ignore(@moon-wfst.set_final(builder, state, true))
+  let no_start = @moon-wfst.build_transducer(builder)
+  assert_true(
+    @moon-wfst.accepts_pair(no_start, [], [], weight => !weight)
+    is Err(@moon-wfst.NoStartState),
+  )
+  let started = @moon-wfst.transducer_builder(@moon-wfst.boolean_semiring())
+  let only = @moon-wfst.add_state(started)
+  ignore(@moon-wfst.set_start(started, only))
+  ignore(@moon-wfst.set_final(started, only, true))
+  let empty_relation = @moon-wfst.build_transducer(started)
+  assert_eq(
+    @moon-wfst.accepts_pair(empty_relation, [], [], weight => !weight),
+    Ok(true),
+  )
+  assert_eq(
+    @moon-wfst.accepts_pair(empty_relation, ["unused"], [], weight => !weight),
+    Ok(false),
+  )
+}

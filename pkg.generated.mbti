@@ -14,6 +14,8 @@ pub fn[W] accepting_path_steps(AcceptingPath[W]) -> Array[PathStep[W]]
 
 pub fn[W] accepting_path_total_weight(AcceptingPath[W]) -> W
 
+pub fn[W] accepts_pair(Transducer[W], Array[String], Array[String], (W) -> Bool) -> Result[Bool, WfstError]
+
 pub fn[W] add_arc(TransducerBuilder[W], Int, Label, Label, Int, W) -> Result[Unit, WfstError]
 
 pub fn[W] add_state(TransducerBuilder[W]) -> Int
