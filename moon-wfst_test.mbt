@@ -774,3 +774,136 @@ test "coaccessibility retains explicitly zero-valued final weights" {
     2,
   )
 }
+
+///|
+test "union preserves each relation branch and weights" {
+  let semiring = @moon-wfst.tropical_semiring()
+  let left_builder = @moon-wfst.transducer_builder(semiring)
+  let l0 = @moon-wfst.add_state(left_builder)
+  let l1 = @moon-wfst.add_state(left_builder)
+  ignore(@moon-wfst.set_start(left_builder, l0))
+  ignore(
+    @moon-wfst.set_final(left_builder, l1, @moon-wfst.tropical_cost(2).unwrap()),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      left_builder,
+      l0,
+      @moon-wfst.Label::Symbol("left"),
+      @moon-wfst.Label::Symbol("L"),
+      l1,
+      @moon-wfst.tropical_cost(3).unwrap(),
+    ),
+  )
+  let right_builder = @moon-wfst.transducer_builder(semiring)
+  let r0 = @moon-wfst.add_state(right_builder)
+  let r1 = @moon-wfst.add_state(right_builder)
+  ignore(@moon-wfst.set_start(right_builder, r0))
+  ignore(
+    @moon-wfst.set_final(
+      right_builder,
+      r1,
+      @moon-wfst.tropical_cost(4).unwrap(),
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      right_builder,
+      r0,
+      @moon-wfst.Label::Symbol("right"),
+      @moon-wfst.Label::Symbol("R"),
+      r1,
+      @moon-wfst.tropical_cost(1).unwrap(),
+    ),
+  )
+  let combined = @moon-wfst.union_transducers(
+    @moon-wfst.build_transducer(left_builder),
+    @moon-wfst.build_transducer(right_builder),
+  )
+  assert_eq(@moon-wfst.transducer_state_count(combined), 5)
+  assert_eq(@moon-wfst.transducer_arcs_from(combined, 0).unwrap().length(), 2)
+  let left_path = @moon-wfst.shortest_path(
+    combined,
+    @moon-wfst.tropical_path_order(),
+  ).unwrap()
+  assert_eq(
+    tropical_value_of(@moon-wfst.accepting_path_total_weight(left_path)),
+    5,
+  )
+  assert_eq(@moon-wfst.accepting_path_states(left_path), [0, 1, 2])
+}
+
+///|
+test "concatenation carries left finals onto epsilon connectors" {
+  let semiring = @moon-wfst.tropical_semiring()
+  let left_builder = @moon-wfst.transducer_builder(semiring)
+  let l0 = @moon-wfst.add_state(left_builder)
+  let l1 = @moon-wfst.add_state(left_builder)
+  ignore(@moon-wfst.set_start(left_builder, l0))
+  ignore(
+    @moon-wfst.set_final(left_builder, l1, @moon-wfst.tropical_cost(2).unwrap()),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      left_builder,
+      l0,
+      @moon-wfst.Label::Symbol("a"),
+      @moon-wfst.Label::Symbol("A"),
+      l1,
+      @moon-wfst.tropical_cost(3).unwrap(),
+    ),
+  )
+  let right_builder = @moon-wfst.transducer_builder(semiring)
+  let r0 = @moon-wfst.add_state(right_builder)
+  let r1 = @moon-wfst.add_state(right_builder)
+  ignore(@moon-wfst.set_start(right_builder, r0))
+  ignore(
+    @moon-wfst.set_final(
+      right_builder,
+      r1,
+      @moon-wfst.tropical_cost(5).unwrap(),
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      right_builder,
+      r0,
+      @moon-wfst.Label::Symbol("b"),
+      @moon-wfst.Label::Symbol("B"),
+      r1,
+      @moon-wfst.tropical_cost(7).unwrap(),
+    ),
+  )
+  let combined = @moon-wfst.concatenate_transducers(
+    @moon-wfst.build_transducer(left_builder),
+    @moon-wfst.build_transducer(right_builder),
+  )
+  assert_eq(@moon-wfst.transducer_state_count(combined), 4)
+  assert_true(@moon-wfst.transducer_final_weight(combined, 1).unwrap() is None)
+  let connector = @moon-wfst.transducer_arcs_from(combined, 1).unwrap()[0]
+  assert_true(connector.input is @moon-wfst.Label::Epsilon)
+  assert_eq(connector.destination, 2)
+  assert_eq(tropical_value_of(connector.weight), 2)
+  let path = @moon-wfst.shortest_path(
+    combined,
+    @moon-wfst.tropical_path_order(),
+  ).unwrap()
+  assert_eq(tropical_value_of(@moon-wfst.accepting_path_total_weight(path)), 17)
+}
+
+///|
+test "concatenating an unstarted right graph clears left acceptance" {
+  let semiring = @moon-wfst.boolean_semiring()
+  let left = @moon-wfst.transducer_builder(semiring)
+  let l0 = @moon-wfst.add_state(left)
+  ignore(@moon-wfst.set_start(left, l0))
+  ignore(@moon-wfst.set_final(left, l0, true))
+  let right = @moon-wfst.transducer_builder(semiring)
+  ignore(@moon-wfst.add_state(right))
+  let combined = @moon-wfst.concatenate_transducers(
+    @moon-wfst.build_transducer(left),
+    @moon-wfst.build_transducer(right),
+  )
+  assert_eq(@moon-wfst.transducer_start_state(combined), Some(0))
+  assert_eq(@moon-wfst.transducer_final_weight(combined, 0).unwrap(), None)
+}

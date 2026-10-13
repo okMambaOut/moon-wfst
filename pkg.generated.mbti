@@ -28,6 +28,8 @@ pub fn[W] coaccessible_states(Transducer[W]) -> Array[Bool]
 
 pub fn[W] compose(Transducer[W], Transducer[W]) -> Result[Transducer[W], WfstError]
 
+pub fn[W] concatenate_transducers(Transducer[W], Transducer[W]) -> Transducer[W]
+
 pub fn[W] invert(Transducer[W]) -> Transducer[W]
 
 pub fn label_is_epsilon(Label) -> Bool
@@ -87,6 +89,8 @@ pub fn tropical_path_order() -> PathOrder[TropicalWeight]
 pub fn tropical_semiring() -> Semiring[TropicalWeight]
 
 pub fn tropical_value(TropicalWeight) -> Int?
+
+pub fn[W] union_transducers(Transducer[W], Transducer[W]) -> Transducer[W]
 
 // Errors
 
