@@ -13,16 +13,14 @@ name = "okMambaOut/moon-wfst"
 
 version = "0.1.0"
 
-readme = "README.mbt.md"
+readme = "README.md"
 
-repository = ""
+repository = "https://github.com/okMambaOut/moon-wfst"
 
 license = "Apache-2.0"
 
-keywords = ["wfst", "finite-state", "semiring", "transducer"]
+keywords = [ "wfst", "finite-state", "semiring", "transducer" ]
 
 preferred_target = "wasm"
 
 description = "Weighted finite-state transducer data model and graph algorithms in MoonBit"
-
-

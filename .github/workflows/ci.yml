@@ -1,0 +1,73 @@
+name: MoonBit CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-and-build:
+    name: ${{ matrix.target }} check and build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [wasm, wasm-gc, js, native]
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Install MoonBit
+        shell: bash
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Show toolchain
+        run: moon version --all
+
+      - name: Generate and check interfaces
+        run: |
+          moon info
+          git diff --exit-code -- pkg.generated.mbti
+
+      - name: Check formatting
+        run: moon fmt --check
+
+      - name: Check package
+        run: moon check --target "${{ matrix.target }}" --deny-warn
+
+      - name: Build package
+        run: moon build --target "${{ matrix.target }}" --deny-warn
+
+      - name: Test package
+        run: moon test --target "${{ matrix.target }}" --deny-warn
+
+  tests-and-examples:
+    name: wasm-gc tests and examples
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Install MoonBit
+        shell: bash
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Show toolchain
+        run: moon version --all
+
+      - name: Run tests
+        run: moon test --target wasm-gc --deny-warn
+
+      - name: Run examples
+        run: |
+          moon run --target wasm-gc examples/speech_lattice
+          moon run --target wasm-gc examples/morphology
+          moon run --target wasm-gc examples/ocr_constraints
