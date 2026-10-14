@@ -2,6 +2,11 @@
 
 All notable project changes are recorded here. Release artifact availability is recorded by GitHub Releases and the public MoonCakes registry.
 
+## 0.1.1 — 2026-10-14
+
+- 将 README 完整改为中文，保留安装、示例、API 契约、验证结果、资源限制和作者归属说明。
+- 同步安装命令和发布版本；核心实现、公共 API 与测试行为不变。
+
 ## 0.1.0 — 2026-10-14
 
 - Define the generic weighted-transducer graph, typed labels and explicit epsilon, semiring operations, validated builder snapshots, and bounded tropical weights.
