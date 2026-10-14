@@ -20,18 +20,18 @@ pub(all) struct Semiring[W] {
 pub(all) struct Arc[W] {
   input : Label
   output : Label
-  destination : Int
+  destination : Int32
   weight : W
 }
 
 ///|
 /// Stable errors returned by graph and algorithm APIs.
 pub(all) enum WfstError {
-  InvalidStateId(Int)
+  InvalidStateId(Int32)
   NoStartState
   UnsupportedEpsilonComposition
   GraphHasCycle
-  InvalidPathLimit(Int)
+  InvalidPathLimit(Int32)
   NegativeWeight
   WeightOutOfRange
   NoAcceptingPath
@@ -98,18 +98,18 @@ pub fn boolean_semiring() -> Semiring[Bool] {
 /// A bounded tropical weight. Finite values are non-negative machine integers;
 /// `Infinity` is the additive identity and represents no path.
 pub enum TropicalWeight {
-  Finite(Int)
+  Finite(Int32)
   Infinity
 } derive(Debug)
 
 ///|
 /// The largest machine integer is reserved as tropical infinity.
-const TROPICAL_INFINITY_BOUND : Int = 2147483647
+const TROPICAL_INFINITY_BOUND : Int32 = 2147483647
 
 ///|
 /// Construct a finite tropical cost. Negative and reserved infinity values are
 /// rejected so every public finite value has well-defined saturating addition.
-pub fn tropical_cost(cost : Int) -> Result[TropicalWeight, WfstError] {
+pub fn tropical_cost(cost : Int32) -> Result[TropicalWeight, WfstError] {
   if cost < 0 {
     Err(WfstError::NegativeWeight)
   } else if cost >= TROPICAL_INFINITY_BOUND {
@@ -127,7 +127,7 @@ pub fn tropical_infinity() -> TropicalWeight {
 
 ///|
 /// Return a finite cost, or `None` for tropical infinity.
-pub fn tropical_value(weight : TropicalWeight) -> Int? {
+pub fn tropical_value(weight : TropicalWeight) -> Int32? {
   match weight {
     TropicalWeight::Finite(cost) => Some(cost)
     TropicalWeight::Infinity => None
@@ -145,7 +145,7 @@ pub fn tropical_is_infinite(weight : TropicalWeight) -> Bool {
 
 ///|
 /// Compare tropical weights using their natural least-cost order.
-pub fn tropical_compare(left : TropicalWeight, right : TropicalWeight) -> Int {
+pub fn tropical_compare(left : TropicalWeight, right : TropicalWeight) -> Int32 {
   match (left, right) {
     (TropicalWeight::Infinity, TropicalWeight::Infinity) => 0
     (TropicalWeight::Infinity, TropicalWeight::Finite(_)) => 1

@@ -3,7 +3,7 @@
 /// caller must ensure comparison agrees with semiring alternatives and that
 /// extending a path by a non-negative weight is monotone.
 pub struct PathOrder[W] {
-  compare : (W, W) -> Int
+  compare : (W, W) -> Int32
   is_nonnegative : (W) -> Bool
   is_zero : (W) -> Bool
 }
@@ -11,7 +11,7 @@ pub struct PathOrder[W] {
 ///|
 /// Construct a path-order policy for a caller-defined weight domain.
 pub fn[W] path_order(
-  compare : (W, W) -> Int,
+  compare : (W, W) -> Int32,
   is_nonnegative : (W) -> Bool,
   is_zero : (W) -> Bool,
 ) -> PathOrder[W] {
@@ -31,14 +31,14 @@ pub fn tropical_path_order() -> PathOrder[TropicalWeight] {
 ///|
 /// One traversed arc annotated with the source state.
 pub(all) struct PathStep[W] {
-  source : Int
+  source : Int32
   arc : Arc[W]
 }
 
 ///|
 /// A least-cost accepting path with its terminal weight included in `total`.
 pub struct AcceptingPath[W] {
-  states : Array[Int]
+  states : Array[Int32]
   steps : Array[PathStep[W]]
   final_weight : W
   total : W
@@ -46,8 +46,8 @@ pub struct AcceptingPath[W] {
 
 ///|
 /// Return a copy of the state sequence from start through accepting state.
-pub fn[W] accepting_path_states(path : AcceptingPath[W]) -> Array[Int] {
-  let result : Array[Int] = []
+pub fn[W] accepting_path_states(path : AcceptingPath[W]) -> Array[Int32] {
+  let result : Array[Int32] = []
   for state in path.states {
     result.push(state)
   }
@@ -107,7 +107,7 @@ pub fn[W] shortest_path(
 
   let count = transducer.outgoing.length()
   let distances : Array[W?] = []
-  let predecessors : Array[(Int, Int)?] = []
+  let predecessors : Array[(Int32, Int32)?] = []
   let settled : Array[Bool] = []
   for _ in 0..<count {
     distances.push(None)
@@ -121,7 +121,7 @@ pub fn[W] shortest_path(
 
   let mut iteration = 0
   while iteration < count {
-    let mut selected : Int? = None
+    let mut selected : Int32? = None
     for state in 0..<count {
       if !settled[state] {
         match distances[state] {
@@ -172,7 +172,7 @@ pub fn[W] shortest_path(
     iteration = iteration + 1
   }
 
-  let mut best_state : Int? = None
+  let mut best_state : Int32? = None
   let mut best_total : W? = None
   let mut best_final : W? = None
   for state in 0..<count {
@@ -205,7 +205,7 @@ pub fn[W] shortest_path(
   }
   let final_weight = best_final.unwrap()
   let total = best_total.unwrap()
-  let reversed_states : Array[Int] = []
+  let reversed_states : Array[Int32] = []
   let reversed_steps : Array[PathStep[W]] = []
   reversed_states.push(goal)
   let mut cursor = goal
@@ -221,7 +221,7 @@ pub fn[W] shortest_path(
     cursor = previous
     reversed_states.push(cursor)
   }
-  let states : Array[Int] = []
+  let states : Array[Int32] = []
   let steps : Array[PathStep[W]] = []
   for offset in 0..<reversed_states.length() {
     states.push(reversed_states[reversed_states.length() - offset - 1])

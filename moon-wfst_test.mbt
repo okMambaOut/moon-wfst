@@ -7,7 +7,7 @@ test "epsilon is distinct from an empty symbol" {
 
 ///|
 test "semiring operations are caller supplied" {
-  let integers : @moon-wfst.Semiring[Int] = {
+  let integers : @moon-wfst.Semiring[Int32] = {
     zero: 0,
     one: 1,
     plus: (left, right) => left + right,
@@ -340,7 +340,7 @@ test "composition requires explicit starts" {
 }
 
 ///|
-fn tropical_value_of(weight : @moon-wfst.TropicalWeight) -> Int {
+fn tropical_value_of(weight : @moon-wfst.TropicalWeight) -> Int32 {
   @moon-wfst.tropical_value(weight).unwrap()
 }
 
@@ -445,7 +445,7 @@ test "shortest path reports missing start and disconnected finals" {
 
 ///|
 test "shortest path rejects negative weights before search" {
-  let integer_semiring : @moon-wfst.Semiring[Int] = {
+  let integer_semiring : @moon-wfst.Semiring[Int32] = {
     zero: 999999,
     one: 0,
     plus: (left, right) => if left < right { left } else { right },
@@ -639,7 +639,7 @@ test "a zero-arc accepting path includes only its final weight" {
 
 ///|
 test "negative terminal costs are rejected" {
-  let operations : @moon-wfst.Semiring[Int] = {
+  let operations : @moon-wfst.Semiring[Int32] = {
     zero: 999,
     one: 0,
     plus: (left, right) => if left < right { left } else { right },
@@ -1184,7 +1184,7 @@ test "DAG k-best paths rank final weights and preserve equal-cost order" {
 
 ///|
 test "DAG k-best accepts negative arc costs without applying Dijkstra" {
-  let operations : @moon-wfst.Semiring[Int] = {
+  let operations : @moon-wfst.Semiring[Int32] = {
     zero: 999,
     one: 0,
     plus: (left, right) => if left < right { left } else { right },
@@ -1440,7 +1440,7 @@ test "accepting core agrees with trim and identifies already trimmed graphs" {
 
 ///|
 test "forward and backward semiring passes aggregate every accepting derivation" {
-  let integers : @moon-wfst.Semiring[Int] = {
+  let integers : @moon-wfst.Semiring[Int32] = {
     zero: 0,
     one: 1,
     plus: (left, right) => left + right,
@@ -1539,7 +1539,7 @@ test "DAG semiring passes define missing-start and cycle behavior" {
 }
 
 ///|
-fn matrix_operations() -> @moon-wfst.Semiring[(Int, Int, Int, Int)] {
+fn matrix_operations() -> @moon-wfst.Semiring[(Int32, Int32, Int32, Int32)] {
   {
     zero: (0, 0, 0, 0),
     one: (1, 0, 0, 1),
@@ -1599,7 +1599,7 @@ test "DAG aggregation preserves noncommutative matrix path order" {
 
 ///|
 test "membership is support graph existence rather than aggregate nonzero" {
-  let integers : @moon-wfst.Semiring[Int] = {
+  let integers : @moon-wfst.Semiring[Int32] = {
     zero: 0,
     one: 1,
     plus: (a, b) => a + b,

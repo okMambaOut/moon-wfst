@@ -3,7 +3,7 @@
 /// identifier. `None` means that the original state was removed.
 pub struct TrimResult[W] {
   graph : Transducer[W]
-  old_to_new : Array[Int?]
+  old_to_new : Array[Int32?]
 }
 
 ///|
@@ -19,7 +19,7 @@ pub fn[W] reachable_states(transducer : Transducer[W]) -> Array[Bool] {
     None => ()
     Some(start) => {
       reached[start] = true
-      let queue : Array[Int] = [start]
+      let queue : Array[Int32] = [start]
       let mut cursor = 0
       while cursor < queue.length() {
         let state = queue[cursor]
@@ -42,9 +42,9 @@ pub fn[W] reachable_states(transducer : Transducer[W]) -> Array[Bool] {
 /// that value is the semiring zero. Epsilon and zero-valued arcs are traversed.
 pub fn[W] coaccessible_states(transducer : Transducer[W]) -> Array[Bool] {
   let count = transducer.outgoing.length()
-  let predecessors : Array[Array[Int]] = []
+  let predecessors : Array[Array[Int32]] = []
   let accessible : Array[Bool] = []
-  let queue : Array[Int] = []
+  let queue : Array[Int32] = []
   for state in 0..<count {
     predecessors.push([])
     accessible.push(false)
@@ -80,8 +80,8 @@ pub fn[W] trim_result_transducer(result : TrimResult[W]) -> Transducer[W] {
 
 ///|
 /// Return a copy of the original-to-compacted state mapping.
-pub fn[W] trim_result_state_mapping(result : TrimResult[W]) -> Array[Int?] {
-  let copy : Array[Int?] = []
+pub fn[W] trim_result_state_mapping(result : TrimResult[W]) -> Array[Int32?] {
+  let copy : Array[Int32?] = []
   for state in result.old_to_new {
     copy.push(state)
   }
@@ -97,7 +97,7 @@ pub fn[W] trim_result_state_mapping(result : TrimResult[W]) -> Array[Int?] {
 pub fn[W] trim(transducer : Transducer[W]) -> TrimResult[W] {
   let core = accepting_core_states(transducer)
   let keep : Array[Bool] = []
-  let mapping : Array[Int?] = []
+  let mapping : Array[Int32?] = []
   let mut retained_count = 0
   for state in 0..<transducer.outgoing.length() {
     let retained = core[state]
@@ -155,9 +155,9 @@ pub fn[W] trim(transducer : Transducer[W]) -> TrimResult[W] {
 /// after states already in the queue. A cyclic graph returns `GraphHasCycle`.
 pub fn[W] topological_order(
   transducer : Transducer[W],
-) -> Result[Array[Int], WfstError] {
+) -> Result[Array[Int32], WfstError] {
   let count = transducer.outgoing.length()
-  let indegree : Array[Int] = []
+  let indegree : Array[Int32] = []
   for _ in 0..<count {
     indegree.push(0)
   }
@@ -166,13 +166,13 @@ pub fn[W] topological_order(
       indegree[arc.destination] = indegree[arc.destination] + 1
     }
   }
-  let queue : Array[Int] = []
+  let queue : Array[Int32] = []
   for state in 0..<count {
     if indegree[state] == 0 {
       queue.push(state)
     }
   }
-  let order : Array[Int] = []
+  let order : Array[Int32] = []
   let mut cursor = 0
   while cursor < queue.length() {
     let state = queue[cursor]
@@ -198,7 +198,7 @@ pub fn[W] topological_order(
 /// an algorithm chooses its own entry state. Every stored arc is traversed.
 pub fn[W] reachable_states_from(
   transducer : Transducer[W],
-  root : Int,
+  root : Int32,
 ) -> Result[Array[Bool], WfstError] {
   let count = transducer.outgoing.length()
   if root < 0 || root >= count {
@@ -209,7 +209,7 @@ pub fn[W] reachable_states_from(
     reached.push(false)
   }
   reached[root] = true
-  let queue : Array[Int] = [root]
+  let queue : Array[Int32] = [root]
   let mut cursor = 0
   while cursor < queue.length() {
     let state = queue[cursor]

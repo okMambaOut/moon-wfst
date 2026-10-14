@@ -61,9 +61,9 @@ moon build --target wasm-gc --deny-warn
 moon test --target wasm-gc --deny-warn
 ```
 
-On this workstation with MoonBit `0.1.20260920` (verified 2026-10-14), the wasm-gc, WebAssembly, and JavaScript test runs each passed **47/47 tests**. Strict checks passed for `wasm-gc`, `wasm`, `js`, and `native`; builds passed for `wasm-gc`, `wasm`, and `js`. The `native` build could not run because this Windows machine has no `cc`, `gcc`, or `clang`; the CI job requests that build on Ubuntu. All three examples ran on `wasm-gc` and printed the fixture outputs above. The GitHub Actions workflow checks and builds all four targets, runs tests on all four targets and the three wasm-gc examples. A configured workflow is not evidence of a completed remote CI run.
+On this workstation with MoonBit `0.1.20261012` (verified 2026-10-14), the wasm-gc, WebAssembly, and JavaScript test runs each passed **47/47 tests**. Strict checks passed for `wasm-gc`, `wasm`, `js`, and `native`; builds passed for `wasm-gc`, `wasm`, and `js`. The `native` build could not run because this Windows machine has no `cc`, `gcc`, or `clang`; the CI job requests that build on Ubuntu. All three examples ran on `wasm-gc` and printed the fixture outputs above. The GitHub Actions workflow checks and builds all four targets, runs tests on all four targets and the three wasm-gc examples. A configured workflow is not evidence of a completed remote CI run.
 
-The root library package contains **1,601 physical lines** of non-test `.mbt` implementation (blank lines included; tests, examples, generated interfaces, and build output excluded). These are scope and verification facts, not performance claims.
+The root library package contains **1,604 physical lines** of non-test `.mbt` implementation (blank lines included; tests, examples, generated interfaces, and build output excluded). These are scope and verification facts, not performance claims.
 
 ## License, attribution, and AI use
 

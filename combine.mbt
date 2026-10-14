@@ -3,7 +3,7 @@
 fn[W] copy_transducer_into(
   source : Transducer[W],
   destination : TransducerBuilder[W],
-  offset : Int,
+  offset : Int32,
 ) -> Unit {
   for old_state in 0..<source.outgoing.length() {
     let new_state = offset + old_state

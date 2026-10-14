@@ -1,5 +1,8 @@
 ///|
-fn find_state_pair(pairs : Array[(Int, Int)], sought : (Int, Int)) -> Int? {
+fn find_state_pair(
+  pairs : Array[(Int32, Int32)],
+  sought : (Int32, Int32),
+) -> Int32? {
   for index in 0..<pairs.length() {
     if pairs[index] == sought {
       return Some(index)
@@ -32,7 +35,7 @@ pub fn[W] compose(
   }
 
   let builder = transducer_builder(left.semiring)
-  let pairs : Array[(Int, Int)] = []
+  let pairs : Array[(Int32, Int32)] = []
   pairs.push((left_start, right_start))
   ignore(add_state(builder))
   ignore(set_start(builder, 0))

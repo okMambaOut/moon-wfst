@@ -1,11 +1,11 @@
 ///|
 fn add_candidate(
   builder : @wfst.TransducerBuilder[@wfst.TropicalWeight],
-  source : Int,
-  destination : Int,
+  source : Int32,
+  destination : Int32,
   cell : String,
   glyph : String,
-  cost : Int,
+  cost : Int32,
 ) -> Unit {
   ignore(
     @wfst.add_arc(
@@ -50,11 +50,11 @@ fn build_ocr_lattice(
 ///|
 fn add_rule(
   builder : @wfst.TransducerBuilder[@wfst.TropicalWeight],
-  source : Int,
-  destination : Int,
+  source : Int32,
+  destination : Int32,
   observed : String,
   normalized : String,
-  penalty : Int,
+  penalty : Int32,
 ) -> Unit {
   ignore(
     @wfst.add_arc(

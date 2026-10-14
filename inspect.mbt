@@ -2,14 +2,14 @@
 /// Structural metrics captured from a transducer snapshot. Epsilon counts are
 /// independent: an epsilon/epsilon arc contributes to both counters.
 pub(all) struct TransducerStats {
-  state_count : Int
-  arc_count : Int
-  epsilon_input_arc_count : Int
-  epsilon_output_arc_count : Int
-  final_state_count : Int
-  max_out_degree : Int
-  reachable_state_count : Int
-  coaccessible_state_count : Int
+  state_count : Int32
+  arc_count : Int32
+  epsilon_input_arc_count : Int32
+  epsilon_output_arc_count : Int32
+  final_state_count : Int32
+  max_out_degree : Int32
+  reachable_state_count : Int32
+  coaccessible_state_count : Int32
   has_start : Bool
 } derive(Eq)
 
@@ -22,13 +22,13 @@ pub extend TransducerStats with Eq::{equal, not_equal}
 /// retained as separate entries. The returned array is independent of the graph.
 pub fn[W] transducer_incoming_arcs(
   transducer : Transducer[W],
-  destination : Int,
-) -> Result[Array[(Int, Arc[W])], WfstError] {
+  destination : Int32,
+) -> Result[Array[(Int32, Arc[W])], WfstError] {
   let count = transducer.outgoing.length()
   if destination < 0 || destination >= count {
     return Err(WfstError::InvalidStateId(destination))
   }
-  let incoming : Array[(Int, Arc[W])] = []
+  let incoming : Array[(Int32, Arc[W])] = []
   for source in 0..<count {
     for arc in transducer.outgoing[source] {
       if arc.destination == destination {

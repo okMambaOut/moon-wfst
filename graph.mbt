@@ -5,7 +5,7 @@ pub struct TransducerBuilder[W] {
   semiring : Semiring[W]
   outgoing : Array[Array[Arc[W]]]
   final_weights : Array[W?]
-  mut start : Int?
+  mut start : Int32?
 }
 
 ///|
@@ -15,7 +15,7 @@ pub struct Transducer[W] {
   semiring : Semiring[W]
   outgoing : Array[Array[Arc[W]]]
   final_weights : Array[W?]
-  start : Int?
+  start : Int32?
 }
 
 ///|
@@ -28,7 +28,7 @@ pub fn[W] transducer_builder(semiring : Semiring[W]) -> TransducerBuilder[W] {
 
 ///|
 /// Append a state and return its dense, zero-based identifier.
-pub fn[W] add_state(builder : TransducerBuilder[W]) -> Int {
+pub fn[W] add_state(builder : TransducerBuilder[W]) -> Int32 {
   let id = builder.outgoing.length()
   let arcs : Array[Arc[W]] = []
   builder.outgoing.push(arcs)
@@ -40,7 +40,7 @@ pub fn[W] add_state(builder : TransducerBuilder[W]) -> Int {
 /// Set the start state. An invalid state id leaves the builder unchanged.
 pub fn[W] set_start(
   builder : TransducerBuilder[W],
-  state : Int,
+  state : Int32,
 ) -> Result[Unit, WfstError] {
   if state < 0 || state >= builder.outgoing.length() {
     Err(WfstError::InvalidStateId(state))
@@ -55,7 +55,7 @@ pub fn[W] set_start(
 /// retains the distinction between a final state with zero weight and non-final.
 pub fn[W] set_final(
   builder : TransducerBuilder[W],
-  state : Int,
+  state : Int32,
   weight : W,
 ) -> Result[Unit, WfstError] {
   if state < 0 || state >= builder.outgoing.length() {
@@ -70,7 +70,7 @@ pub fn[W] set_final(
 /// Mark a state as non-final.
 pub fn[W] clear_final(
   builder : TransducerBuilder[W],
-  state : Int,
+  state : Int32,
 ) -> Result[Unit, WfstError] {
   if state < 0 || state >= builder.outgoing.length() {
     Err(WfstError::InvalidStateId(state))
@@ -84,10 +84,10 @@ pub fn[W] clear_final(
 /// Add an arc after validating both endpoint identifiers.
 pub fn[W] add_arc(
   builder : TransducerBuilder[W],
-  source : Int,
+  source : Int32,
   input : Label,
   output : Label,
-  destination : Int,
+  destination : Int32,
   weight : W,
 ) -> Result[Unit, WfstError] {
   let count = builder.outgoing.length()
@@ -122,13 +122,13 @@ pub fn[W] build_transducer(builder : TransducerBuilder[W]) -> Transducer[W] {
 
 ///|
 /// Number of states in a transducer snapshot.
-pub fn[W] transducer_state_count(transducer : Transducer[W]) -> Int {
+pub fn[W] transducer_state_count(transducer : Transducer[W]) -> Int32 {
   transducer.outgoing.length()
 }
 
 ///|
 /// Read the optional start-state identifier.
-pub fn[W] transducer_start_state(transducer : Transducer[W]) -> Int? {
+pub fn[W] transducer_start_state(transducer : Transducer[W]) -> Int32? {
   transducer.start
 }
 
@@ -136,7 +136,7 @@ pub fn[W] transducer_start_state(transducer : Transducer[W]) -> Int? {
 /// Return a copy of a state's outgoing arcs. Invalid identifiers are reported.
 pub fn[W] transducer_arcs_from(
   transducer : Transducer[W],
-  state : Int,
+  state : Int32,
 ) -> Result[Array[Arc[W]], WfstError] {
   if state < 0 || state >= transducer.outgoing.length() {
     Err(WfstError::InvalidStateId(state))
@@ -153,7 +153,7 @@ pub fn[W] transducer_arcs_from(
 /// Read a state's optional final weight.
 pub fn[W] transducer_final_weight(
   transducer : Transducer[W],
-  state : Int,
+  state : Int32,
 ) -> Result[W?, WfstError] {
   if state < 0 || state >= transducer.final_weights.length() {
     Err(WfstError::InvalidStateId(state))

@@ -1,7 +1,7 @@
 ///|
 /// A partial accepting path retained by the DAG k-best dynamic program.
 priv struct PartialPath[W] {
-  states : Array[Int]
+  states : Array[Int32]
   steps : Array[PathStep[W]]
   weight : W
 }
@@ -12,8 +12,8 @@ priv struct PartialPath[W] {
 fn[W] insert_partial_path(
   paths : Array[PartialPath[W]],
   candidate : PartialPath[W],
-  limit : Int,
-  compare : (W, W) -> Int,
+  limit : Int32,
+  compare : (W, W) -> Int32,
 ) -> Array[PartialPath[W]] {
   let result : Array[PartialPath[W]] = []
   let mut inserted = false
@@ -37,8 +37,8 @@ fn[W] insert_partial_path(
 fn[W] insert_accepting_path(
   paths : Array[AcceptingPath[W]],
   candidate : AcceptingPath[W],
-  limit : Int,
-  compare : (W, W) -> Int,
+  limit : Int32,
+  compare : (W, W) -> Int32,
 ) -> Array[AcceptingPath[W]] {
   let result : Array[AcceptingPath[W]] = []
   let mut inserted = false
@@ -67,7 +67,7 @@ fn[W] insert_accepting_path(
 pub fn[W] shortest_paths_in_dag(
   transducer : Transducer[W],
   order : PathOrder[W],
-  limit : Int,
+  limit : Int32,
 ) -> Result[Array[AcceptingPath[W]], WfstError] {
   if limit <= 0 {
     return Err(WfstError::InvalidPathLimit(limit))
@@ -85,7 +85,7 @@ pub fn[W] shortest_paths_in_dag(
     paths_to_state.push([])
   }
   if !(order.is_zero)(transducer.semiring.one) {
-    let initial_states : Array[Int] = [start]
+    let initial_states : Array[Int32] = [start]
     let initial_steps : Array[PathStep[W]] = []
     paths_to_state[start].push({
       states: initial_states,
@@ -103,7 +103,7 @@ pub fn[W] shortest_paths_in_dag(
             arc.weight,
           )
           if !(order.is_zero)(weight) {
-            let states : Array[Int] = []
+            let states : Array[Int32] = []
             for path_state in prefix.states {
               states.push(path_state)
             }

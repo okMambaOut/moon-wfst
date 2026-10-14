@@ -1,9 +1,9 @@
 ///|
 /// A node in the finite product graph used by exact relation membership.
 priv struct ProductConfiguration {
-  state : Int
-  input_index : Int
-  output_index : Int
+  state : Int32
+  input_index : Int32
+  output_index : Int32
 }
 
 ///|
@@ -50,7 +50,7 @@ pub fn[W] accepts_pair(
     }
     for arc in transducer.outgoing[current.state] {
       if !is_zero(arc.weight) {
-        let next_input : Int? = match arc.input {
+        let next_input : Int32? = match arc.input {
           Label::Epsilon => Some(current.input_index)
           Label::Symbol(symbol) =>
             if current.input_index < input_length &&
@@ -60,7 +60,7 @@ pub fn[W] accepts_pair(
               None
             }
         }
-        let next_output : Int? = match arc.output {
+        let next_output : Int32? = match arc.output {
           Label::Epsilon => Some(current.output_index)
           Label::Symbol(symbol) =>
             if current.output_index < output_length &&
