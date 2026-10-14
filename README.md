@@ -2,7 +2,7 @@
 
 MoonWFST is a reusable MoonBit library for weighted finite-state transducers (WFSTs). A transducer is a finite graph whose arcs carry input and output labels plus weights interpreted by a caller-supplied semiring. The library provides algorithms shared by speech-lattice decoding, morphological analysis, OCR post-processing, tokenization, and other finite-state pipelines; it is not a recognizer or domain-specific model.
 
-**Status:** version `0.1.0` is an explicit, bounded API subset. The package is not published to MoonCakes and has no GitHub Release. Example outputs below come from source-defined synthetic graphs, not production data or benchmarks.
+**Status:** version `0.1.0` is an explicit, bounded API subset. Example outputs below come from source-defined synthetic graphs, not production data or benchmarks.
 
 ## Capabilities
 
@@ -34,7 +34,7 @@ The OCR example does not process pixels, invoke an OCR model, verify checksums, 
 
 ## Use as a library
 
-The examples are complete MoonBit packages and show graph construction, composition, path ranking, and result extraction. A consumer package imports the module as `@wfst` and builds a graph with `transducer_builder`, `add_state`, `set_start`, `set_final`, and `add_arc`; see [`examples/speech_lattice/main.mbt`](examples/speech_lattice/main.mbt) for an end-to-end API use. The current module name is `okMambaOut/moon-wfst`. Until a public package is published, there is no `moon add` installation command; use a local checkout/workspace dependency for development.
+The examples are complete MoonBit packages and show graph construction, composition, path ranking, and result extraction. A consumer package imports the module as `@wfst` and builds a graph with `transducer_builder`, `add_state`, `set_start`, `set_final`, and `add_arc`; see [`examples/speech_lattice/main.mbt`](examples/speech_lattice/main.mbt) for an end-to-end API use. The current module name is `okMambaOut/moon-wfst`. Install the exact release in a new MoonBit module with `moon add okMambaOut/moon-wfst@0.1.0`, then import `okMambaOut/moon-wfst` as `@wfst` in your package configuration. Public artifacts are versioned independently; inspect the [GitHub release](https://github.com/okMambaOut/moon-wfst/releases/tag/v0.1.0) and [MoonCakes module](https://mooncakes.io/docs/okMambaOut/moon-wfst) for availability.
 
 ## Contracts and limits
 
@@ -61,7 +61,7 @@ moon build --target wasm-gc --deny-warn
 moon test --target wasm-gc --deny-warn
 ```
 
-On this workstation with MoonBit `0.1.20261012` (verified 2026-10-14), the wasm-gc, WebAssembly, and JavaScript test runs each passed **47/47 tests**. Strict checks passed for `wasm-gc`, `wasm`, `js`, and `native`; builds passed for `wasm-gc`, `wasm`, and `js`. The `native` build could not run because this Windows machine has no `cc`, `gcc`, or `clang`; the CI job requests that build on Ubuntu. All three examples ran on `wasm-gc` and printed the fixture outputs above. The GitHub Actions workflow checks and builds all four targets, runs tests on all four targets and the three wasm-gc examples. A configured workflow is not evidence of a completed remote CI run.
+On this workstation with MoonBit `0.1.20261012` (verified 2026-10-14), the wasm-gc, WebAssembly, and JavaScript test runs each passed **47/47 tests**. Strict checks passed for `wasm-gc`, `wasm`, `js`, and `native`; builds passed for `wasm-gc`, `wasm`, and `js`. The `native` build could not run because this Windows machine has no `cc`, `gcc`, or `clang`; the Ubuntu CI job provides native build and runtime verification. All three examples ran on `wasm-gc` and printed the fixture outputs above. The GitHub Actions workflow checks and builds all four targets, runs tests on all four targets and the three wasm-gc examples. The [verified CI run](https://github.com/okMambaOut/moon-wfst/actions/runs/38513246447) for commit `4d2378886ede39244b9543674df1ac39b709e290` passed all five jobs, including native check/build/test and the example job. Later release commits must pass the same workflow at their own SHA.
 
 The root library package contains **1,604 physical lines** of non-test `.mbt` implementation (blank lines included; tests, examples, generated interfaces, and build output excluded). These are scope and verification facts, not performance claims.
 

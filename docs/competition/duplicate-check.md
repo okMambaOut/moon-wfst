@@ -33,7 +33,7 @@
 | [Suquster/moonbit-pathfinding](https://github.com/Suquster/moonbit-pathfinding)，本轮 main 快照 | README、`src/core/prelude.mbt`、`src/directed/dijkstra.mbt`／`dag_shortest_path.mbt` 及对应测试：节点／邻居回调、`Weight.add/zero/infinity` 和总序。测试含菱形、负边、不可达及同起终点 | 最短路／拓扑确实重叠；核实接口未提供双标签关系、终止权重及任意半环求和。强制总序 Weight 会排除矩阵聚合；独立模型有必要，未声称实现更快或更优 |
 | [trkbt10/indexion](https://github.com/trkbt10/indexion)，本轮 main 快照 | README、`src/kgf/parser/parse_preprocess_fst.mbt`、`src/kgf/preprocess/fst.mbt`／`preprocess_wbtest.mbt`：JSON 预处理 FST、字符类、首个匹配转移、Emit/Buf/Flush 动作。测试检查 base64 分类／转换；未找到独立通用加权 FST 测试套件 | 真实字符转导邻居，中心是 KGF 预处理和缓冲动作，不是分支关系、半环或加权组合；扩展跨越原有产品边界 |
 | [length-super/moonctl](https://github.com/length-super/moonctl)，本轮 main 快照 | README、根接口、`model.mbt`／`check.mbt`／`oracle_test.mbt`：状态命题、动作边、CTL 固定点／证据，参考测试枚举路径和循环 | 有限状态图相邻，但中心是时序逻辑真假及见证 |
-| `lhw153766-ctrl/sparse-linalg@0.1.1` | 仅复核元数据和已有注册表矩阵／分解边界 | 数值底座邻居；前轮“min-plus/tropical”细节本轮未独立核实，不继续作强断言，未排除全部源码 |
+| `lhw153766-ctrl/sparse-linalg@0.1.1` | 发布前补查 README、`semiring/semiring.mbt`／`semiring_wbtest.mbt`、`ops/ops.mbt`、`graph/graph.mbt`／`graph_test.mbt`：CSR／CSC、泛型 spgemm、Bool OR/AND 与 Double MinPlus、两跳／传递闭包及全点对路径测试，图连通／PageRank | 半环矩阵乘法、min-plus 和可达性确实重叠，不作为独创算法宣称；已查接口／源码片段未提供双标签弧、显式终止权重或 WFST 组合。直接扩展会要求新的关系图中心模型与并行路径语义；未穷尽整个仓库，邻居测试只读未运行 |
 
 官方包源码通过隔离研究模块 `moon add` 下载，只阅读，不拷入生产库或计入规模。本轮检查相邻测试的源码语义，**未执行其测试、未背书质量或穷尽所有子包**。GitHub 内容 API 保存 blob SHA，仓库外证据清单保存 SHA-256 和检索响应；不上传私有材料。
 
@@ -59,3 +59,8 @@ GitHub 隔离只读 API 仓库检索：`wfst/transducer/semiring language:MoonBi
 ## 6. 许可与参照
 
 [OpenFst](https://github.com/mjansche/openfst)（Apache-2.0）及 [RustFST](https://github.com/GWBM/RustFST)（MIT/Apache-2.0）是跨语言数据模型／语义参照，不是复制实现或完整兼容的上游。实现、测试图和示例独立编写，toolchain core 不 vendoring。许可与 AI 使用说明见仓库根文件。申报书只写已实现能力、可复现数字、参照和边界，不复制搜索流水。
+## 7. 发布前增量复核（2026-10-14）
+
+对当前注册表相关指纹重新读取，并重复公开包检索：`wfst` 0、`transducer` 3、`semiring` 5。GitHub `wfst language:MoonBit` 返回 1 个仓库，为本项目已公开仓库；该次响应 incomplete_results=false。这是发布时快照，不能推导生态绝对不存在其他实现。
+
+补读 sparse-linalg 主分支 README、半环源码与测试、矩阵运算和图算法／测试，修正前面仅元数据核验的不足：邻居已有真实 MinPlus 与布尔半环矩阵路径能力。MoonWFST 不以这些单项计算作为差异点，而以输入／输出标签关系、终止权重、组合边界和接受路径公共模型提供独立复用接口。文件快照和 GitHub blob SHA 保存在仓库外审计目录，未复制实现。补查后结论仍为：**在已记录检索范围内未发现成熟直接替代。**
