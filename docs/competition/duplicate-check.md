@@ -1,56 +1,61 @@
-# MoonWFST 语义查重与选题记录
+# MoonWFST 语义查重与选题复核
 
-- 检索日期：2026-10-13
-- 选定方向：通用加权有限状态转导机（Weighted Finite-State Transducer, WFST）基础库
-- 参赛截止：2026-10-30 24:00（按本次参赛者提供的 Skill 记录；未以网页重新解释规则）
-- 结论限定：**在已记录检索范围内未发现成熟直接替代。** 这不是“生态中绝对不存在同类”的断言。
+- 首次选择：2026-10-13；接手续查：2026-10-14。
+- 截止：2026-10-30 24:00，仅按 Skill 固定记录，不重新打开赛事章程。
+- 复核决定：保留已获参赛者确认的 MoonWFST；不足是工程完成度，不是重选理由。
+- 有限结论：**在已记录检索范围内未发现成熟直接替代。** 不声称穷尽所有仓库、分支、未发布模块或不同词汇的实现。
 
-## 1. 选题边界与生态广度
+## 1. 三个不同问题域的候选
 
-拟实现一个可复用的带权关系图模型，而不是只为某个识别器服务的词典或界面。模型包含有限状态、起始/终止权重、输入与输出标签、弧权重和显式的半环运算约束；核心库面向可组合的关系与路径算法。至少三类下游工作流为：
-
-1. **语音/文本识别工具链**：识别器把词或子词候选整理成带代价的转移图；下游用库组合词法约束并取得最低代价的可接受路径。
-2. **形态分析与生成工具**：语言工具将词形、词素与词性映射为加权路径；调用者组合词素规则后枚举或选取分析路径。
-3. **OCR/文档处理管线**：识别器产生字符候选格；后处理器将字符图与格式或词法约束组合，回放得分最低的候选序列。
-4. **编译器、搜索和数据管线**：开发者可把标签化加权关系作为依赖进行变换与路径查询，无需各自重写图模型、组合和路径追踪。
-
-项目范围限定为通用图数据模型、标签投影/反转、在明示限制下的组合、最短接受路径与路径回放。语音/视觉模型、语料、领域词典、训练过程、识别服务、用户界面不属于基础库。
-
-## 2. 本轮候选及淘汰理由
-
-| 排序 | 候选 | 生态广度判断 | 语义重叠证据与决定 |
+| 排序／决定 | 候选、基础数据和流程 | 至少三类复用方 | 核心语义证据 |
 |---|---|---|---|
-| 1 | 通用加权有限状态转导机（WFST） | 多个下游类别共享相同关系图、权重及路径 API，能够形成独立基础库。 | `moon-certified` 的字符串键值 FST/trie、`walkzzz/re-mbt` 的正则 DFA 和 `zploc/loci` 的应用态 Mealy 机相邻但语义边界不同。暂予通过有限范围门槛；仍须按本记录披露搜索限制。 |
-| 2 | 可编程概率模型熵编码库 | 编解码器、传输和存储系统有多类调用者，方向本身具备复用性。 | `moon-certified@0.1.1` 已有 rANS/tANS 与算术编码主流程。把 CDF 改为调用者传入不足以区分核心算法，因此淘汰；其他压缩库的源码与测试未全部核实。 |
-| 3 | 通用多分辨率离散小波变换（DWT） | 图像、信号分析、压缩和科学计算可共享变换 API。 | `hwlxmm/dsp@0.1.0` 列出 Haar/Daubechies 4 变换 API，`walkzzz/image@0.5.0` 列出一维/二维 Haar 正逆变换；核心已有直接邻居，因此淘汰。相邻实现的源码和测试未全部核实。 |
-| 淘汰 | 常微分方程求解器 | 仿真、控制、科学计算有多类下游。 | `moon-certified` 已有 RK45，`moonbit-circuit-solver` 已有自适应 RK；功能主线重叠。 |
-| 淘汰 | Unicode collation | 数据库、搜索、排序、区域设置处理可复用。 | `CaptainK-65/moon-collate@0.2.1` 已覆盖相关排序能力。 |
-| 淘汰 | 稀疏凸二次规划 | 优化、控制、调度等系统可能复用。 | `moon-certified/optimization/kkt` 已覆盖关键求解流程，存在直接语义重叠。 |
-| 淘汰 | 隐马尔可夫模型（HMM） | 序列建模跨越生物信息、语音等场景。 | `BioSeqs@0.1.9` 已含 HMM 推断和训练主流程。 |
-| 淘汰 | RDF 规范化 | 签名、去重、数据交换及知识图谱管线存在跨领域复用。 | `thy1016/jsonld@0.1.1` 已实现 RDFC 1.0/URDNA2015 规范化流程。 |
-| 淘汰 | 多边形布尔运算 | CAD、地图、图形、切片及空间分析均有基础设施需求。 | `moon-certified/geometry/polygon_boolean` 已覆盖直接核心问题。 |
+| 1，保留 | 加权有限状态转导机：输入／输出标签、弧与终止权重、半环；构图→组合／变换→路径查询与聚合 | 语音候选格、语言形态工具、OCR 后处理、编译与搜索工具 | loci 的业务 Mealy 机、certified 的键值 trie/FST、正则匹配、通用路径库相邻，但下面核实的接口没有形成相同带权关系模型和工作流 |
+| 2，淘汰 | 可编程熵编码：频率／CDF→rANS／tANS／算术码→解码 | 存储、传输、压缩工具 | `Juwan-Hwang/moon-certified@0.1.1` 的 `compression/ans/ans.mbt` 已有频率表、rANS/tANS 压缩与解压；`arithmetic_coding.mbt` 有字节编解码。已检查归一化／重整化源码及空输入、全字节、偏斜分布、往返测试片段。仅改模型输入不足以区分主线 |
+| 3，淘汰 | 离散小波变换：向量／图像→多分辨率系数→重建 | 图像压缩、信号分析、科学计算 | `hwlxmm/dsp@0.1.0` 的 `src/signal/wavelet.mbt` 有 Haar 正逆与 db4 正变换；`signal_advanced_test.mbt` 有 8 点往返。`walkzzz/image@0.5.0` 的 `haar_wavelet.mbt` 有 1D/2D 正逆及去噪，测试有系数、往返、阈值。已有直接主功能 |
 
-## 3. WFST 相邻项目逐项语义边界
+三个方向都有跨域价值；后两个淘汰原因是已存在的核心能力，不是包名。前轮还有 ODE、Unicode 排序、QP、HMM、RDF 规范化、多边形布尔运算的淘汰线索；本轮未重新全面审查，不将这些线索包装为新的充分结论。
 
-| 项目 | 已记录能力 | 与本项目边界 |
+## 2. 选中方向及已实现边界
+
+独立 MoonBit 实现，不是 OpenFst/RustFST 完整移植、词典包、识别器外壳或界面。提供显式 epsilon、半环、验证构图与快照、投影／反转、epsilon-free 组合、并／连接、支持图成员判断、修剪／拓扑排序、最短接受路径、DAG k-best 和前向／后向／总权重聚合。
+
+三例分别完成：识别候选格与词法图组合得到 `cat`（代价 6）；形态候选得到 `go+PAST`（代价 1）；六格合成 OCR 候选与格式约束得到 `NB0158`（代价 6）。它们是源码构造的例子，不是实际识别精度测量。三类调用者复用同一数据模型，而不是三套硬编码产品。
+
+不包含 epsilon-filtered 组合、epsilon closure、确定化、最小化、OpenFst 文件兼容、模型训练或视觉推理。组合要求兼容半环且乘法可交换；聚合可保持非交换乘法顺序。`accepts_pair` 是非零弧／终止的支持图存在性，不等于抵消或饱和后的聚合权重非零。具体约束见 `docs/design/semantics.md`。
+
+## 3. 相邻项目 README、API、源码与测试
+
+| 固定版本／检索对象 | 核实的模型、接口、测试 | 重叠和独立项目必要性 |
 |---|---|---|
-| `moon-certified@0.1.1` | 字符串到整数的键值 FST/trie；另有多种熵编码实现。 | 前者是键值索引而非一般输入/输出标签关系图、半环路径计算和转导组合库。 |
-| `walkzzz/re-mbt@0.1.0` | 正则表达式编译为 DFA 并执行匹配。 | 识别/接受语言，不提供带权输入—输出关系模型与通用转导算法。 |
-| `zploc/loci@0.1.0` | 源码显示应用态 Mealy transducer，使用封闭业务输入/输出枚举，并有 Union/Subtract/Diff/Compose 组合辅助逻辑。 | 这是面向具体协议状态机的应用模型；未发现半环权重、ε-path 或通用加权关系图/最短路径 API。它是最接近的邻居，不能因应用域不同而忽略。其测试未完全核验。 |
-| `lhw153766-ctrl/sparse-linalg` | 有 min-plus/tropical 邻接能力。 | 权重代数/线性代数相邻，不等同于转导图模型及图路径 API。 |
-| Skill 永久注册表中的 `MoonPetri` | 离散加权 place/transition Petri 网及 marking 可达性。 | Petri 网以 place、transition、token marking 和发射可达性为模型；WFST 以有序输入/输出标签和弧权重关系为模型，不复用其核心问题定义。其 GitHub 仓库也是本次用户指定 URL 的既有项目，不得覆盖。 |
+| [zploc/loci@0.1.0](https://mooncakes.io/docs/zploc/loci)，仓库记录 `zpc-sh/loci` | 发布源码 `loci_fsm/README.md`、`transducer.mbt`、`transducer_algebra.mbt`、`transducer_test.mbt`：Mealy `transduce(Self, TransducerInput)`，封闭 Scalar/SubmitWork/Event/Tick/RawBytes 与业务输出；Compose 经桥接函数串接。测试检查状态、事件和输出 | 最接近转导邻居；不是半环加权关系图。扩展封闭业务模型会改变其主抽象。仓库 GET 404，所以采用官方发布包；不据此断言维护停止 |
+| [Juwan-Hwang/moon-certified@0.1.1](https://mooncakes.io/docs/Juwan-Hwang/moon-certified) | `containers/fst/fst.mbt`、`fst_test.mbt`：字符串→整数 trie，build/search/keys；空输入、前缀、键覆盖测试 | 键值查找并非双标签、权重关系和转导组合 |
+| [walkzzz/re-mbt@0.1.0](https://mooncakes.io/docs/walkzzz/re-mbt) | README、接口、`re/core.mbt`／`compile.mbt`、`core_test.mbt`：AST 编译与匹配、分组／位置返回；exec_opt/execp 成功失败和 pos 测试 | 正则接受／捕获，不是通用带权双标签图；不重建其正则 parser |
+| [Suquster/moonbit-pathfinding](https://github.com/Suquster/moonbit-pathfinding)，本轮 main 快照 | README、`src/core/prelude.mbt`、`src/directed/dijkstra.mbt`／`dag_shortest_path.mbt` 及对应测试：节点／邻居回调、`Weight.add/zero/infinity` 和总序。测试含菱形、负边、不可达及同起终点 | 最短路／拓扑确实重叠；核实接口未提供双标签关系、终止权重及任意半环求和。强制总序 Weight 会排除矩阵聚合；独立模型有必要，未声称实现更快或更优 |
+| [trkbt10/indexion](https://github.com/trkbt10/indexion)，本轮 main 快照 | README、`src/kgf/parser/parse_preprocess_fst.mbt`、`src/kgf/preprocess/fst.mbt`／`preprocess_wbtest.mbt`：JSON 预处理 FST、字符类、首个匹配转移、Emit/Buf/Flush 动作。测试检查 base64 分类／转换；未找到独立通用加权 FST 测试套件 | 真实字符转导邻居，中心是 KGF 预处理和缓冲动作，不是分支关系、半环或加权组合；扩展跨越原有产品边界 |
+| [length-super/moonctl](https://github.com/length-super/moonctl)，本轮 main 快照 | README、根接口、`model.mbt`／`check.mbt`／`oracle_test.mbt`：状态命题、动作边、CTL 固定点／证据，参考测试枚举路径和循环 | 有限状态图相邻，但中心是时序逻辑真假及见证 |
+| `lhw153766-ctrl/sparse-linalg@0.1.1` | 仅复核元数据和已有注册表矩阵／分解边界 | 数值底座邻居；前轮“min-plus/tropical”细节本轮未独立核实，不继续作强断言，未排除全部源码 |
 
-## 4. 检索范围、证据及限制
+官方包源码通过隔离研究模块 `moon add` 下载，只阅读，不拷入生产库或计入规模。本轮检查相邻测试的源码语义，**未执行其测试、未背书质量或穷尽所有子包**。GitHub 内容 API 保存 blob SHA，仓库外证据清单保存 SHA-256 和检索响应；不上传私有材料。
 
-按 `$moonbit-hackathon-builder` 要求对照了 Skill 的 `references/project-registry.md`，并检查 MoonCakes 包条目、Moon 搜索结果、GitHub MoonBit 仓库以及关键相邻项目可见的 README、API 和源码线索。上表列出的重叠项按其核心数据模型与调用语义判断，不以包名是否相同作为通过标准。
+## 4. 永久注册表对照
 
-已记录检索限制：Moon 搜索结果有上限且无分页；GitHub API 曾遇限流；`zploc/loci` 和 DWT 相邻项目的测试未能全部核验；部分压缩实现也未全部检查源码和测试。因此结论只适用于已记录检索范围，不能声称穷尽所有分支、未发布代码或仓库。
+对照 Skill 的 `references/project-registry.md` 相关指纹，既有 MoonWFST 条目是本项目续作，不再次注册新选题。
 
-跨语言成熟参照包括 [OpenFst](https://github.com/mjansche/openfst)（Apache-2.0）和 [RustFST](https://github.com/GWBM/RustFST)（MIT/Apache-2.0）。它们用于核对 WFST 的数据模型、算法语义和预期行为；本项目将以 MoonBit 独立实现经明确界定的子集，不复制来源不明代码，也不把未实现的 OpenFst/RustFST 能力写成已支持特性。项目的 `THIRD-PARTY-NOTICES.md` 已按当前实际参考与依赖记录归属；源码与示例为独立 MoonBit 实现，未复制来源不明代码。
+- MoonPetri：place／transition／token marking 和发射可达性；不覆盖、删除或借用旧 `moonpetri` 仓库。
+- MoonDag：任务工期、CPM、slack、变更影响和重跑计划；本项目不提供这些流程。共有拓扑遍历不作为差异化成果。
+- MoonCite：CSL 引用格式化；MoonPhone：电话编号计划。即使 rejected/reserved 也不复用其指纹。
+- MoonOT：离散最优传输 coupling／诊断，不是标签路径关系；矩阵测试不实现传输求解。
 
-## 5. 实施前必须继续遵守的约束
+保留全部历史，账号与发布授权按日期追加；新增邻居标记 external-checked，不宣称项目已完成全平台交付。
 
-- 对 ε 的支持必须逐算法声明。若组合算法只支持 ε-free 输入，就要以 API 文档和结构化错误拒绝其余输入，不得暗示通用 ε-filter 已实现。
-- 最短路径必须说明半环及边权限制，并覆盖不可达、零权、并列路径和权重溢出/非法值等测试路径；不声称支持未经证明的负权或负环语义。
-- 用户指定的 `https://github.com/okMambaOut/moonpetri` 在永久注册表中对应已完成的 MoonPetri Petri 网项目；既有内容不得覆写、删除或与 WFST 混为一个产品。对外发布所需的新仓库选择必须在本地项目准备后单独解决。
-- 本文件是项目查重材料；不得把检索关键词流水或本表淘汰清单复制进一页中文申报书。申报书只能写实现后可核验的能力与结果。
+## 5. 反向检索与限制
+
+2026-10-14，`moon search --limit 100`：wfst 0；transducer 3；semiring 5；fst 6；loci 2；wavelet 6；ans 80。宽泛命中不都是相邻实现；搜索无分页，未声称全量覆盖。
+
+GitHub 隔离只读 API 仓库检索：`wfst/transducer/semiring language:MoonBit` 各 0；`finite-state language:MoonBit` 1（moonctl）；`OpenFst/RustFST MoonBit` 各 0。反向代码检索 `extension:mbt`：wfst 2（WebP fixture 无关）；transducer 11（发现 indexion 等）；semiring 68（发现路径／代数代码）；`shortest_paths_in_dag`、`forward_weights_in_dag` 各 0。incomplete_results=false 仅描述当次查询，不证明没有遗漏。官方 awesome-moonbit 清单也用于辅助寻找不同命名的实现。
+
+限制：未登录 API 曾限流，后续使用指定账号隔离 API；未遍历所有分支／历史，未执行全部邻居测试；loci 链接仓库不可见，但发布包可核实。源码和测试核验采用核心文件／代表片段，不证明相邻整个项目不含额外功能。数字是当时检索快照，不是优越性证据。结论维持：**在已记录检索范围内未发现成熟直接替代。**
+
+## 6. 许可与参照
+
+[OpenFst](https://github.com/mjansche/openfst)（Apache-2.0）及 [RustFST](https://github.com/GWBM/RustFST)（MIT/Apache-2.0）是跨语言数据模型／语义参照，不是复制实现或完整兼容的上游。实现、测试图和示例独立编写，toolchain core 不 vendoring。许可与 AI 使用说明见仓库根文件。申报书只写已实现能力、可复现数字、参照和边界，不复制搜索流水。
