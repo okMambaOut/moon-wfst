@@ -10,9 +10,11 @@ fn find_state_pair(pairs : Array[(Int, Int)], sought : (Int, Int)) -> Int? {
 
 ///|
 /// Compose two epsilon-free transducers. A left output label is joined with an
-/// equal right input label; path weights multiply left-to-right. If the two
-/// graphs were built with different semiring laws, the caller must ensure that
-/// using the left graph's semiring is valid for both.
+/// equal right input label. Both operands must use compatible semiring laws,
+/// and multiplication must be commutative: arc-wise interleaving otherwise
+/// differs from multiplying the complete left path by the complete right path.
+/// These algebraic obligations cannot be checked at runtime. The result uses
+/// the left graph's semiring.
 pub fn[W] compose(
   left : Transducer[W],
   right : Transducer[W],

@@ -1537,3 +1537,142 @@ test "DAG semiring passes define missing-start and cycle behavior" {
     @moon-wfst.total_weight_in_dag(cyclic) is Err(@moon-wfst.GraphHasCycle),
   )
 }
+
+///|
+fn matrix_operations() -> @moon-wfst.Semiring[(Int, Int, Int, Int)] {
+  {
+    zero: (0, 0, 0, 0),
+    one: (1, 0, 0, 1),
+    plus: (a, b) => (a.0 + b.0, a.1 + b.1, a.2 + b.2, a.3 + b.3),
+    times: (a, b) => {
+      (
+        a.0 * b.0 + a.1 * b.2,
+        a.0 * b.1 + a.1 * b.3,
+        a.2 * b.0 + a.3 * b.2,
+        a.2 * b.1 + a.3 * b.3,
+      )
+    },
+  }
+}
+
+///|
+test "DAG aggregation preserves noncommutative matrix path order" {
+  let builder = @moon-wfst.transducer_builder(matrix_operations())
+  for _ in 0..<3 {
+    ignore(@moon-wfst.add_state(builder))
+  }
+  ignore(@moon-wfst.set_start(builder, 0))
+  ignore(@moon-wfst.set_final(builder, 2, (2, 0, 0, 1)))
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      0,
+      @moon-wfst.Epsilon,
+      @moon-wfst.Epsilon,
+      1,
+      (1, 2, 0, 1),
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      1,
+      @moon-wfst.Epsilon,
+      @moon-wfst.Epsilon,
+      2,
+      (1, 0, 3, 1),
+    ),
+  )
+  let graph = @moon-wfst.build_transducer(builder)
+  assert_eq(@moon-wfst.forward_weights_in_dag(graph).unwrap(), [
+    (1, 0, 0, 1),
+    (1, 2, 0, 1),
+    (7, 2, 3, 1),
+  ])
+  assert_eq(@moon-wfst.backward_weights_in_dag(graph).unwrap(), [
+    (14, 2, 6, 1),
+    (2, 0, 6, 1),
+    (2, 0, 0, 1),
+  ])
+  assert_eq(@moon-wfst.total_weight_in_dag(graph).unwrap(), (14, 2, 6, 1))
+}
+
+///|
+test "membership is support graph existence rather than aggregate nonzero" {
+  let integers : @moon-wfst.Semiring[Int] = {
+    zero: 0,
+    one: 1,
+    plus: (a, b) => a + b,
+    times: (a, b) => a * b,
+  }
+  let builder = @moon-wfst.transducer_builder(integers)
+  for _ in 0..<2 {
+    ignore(@moon-wfst.add_state(builder))
+  }
+  ignore(@moon-wfst.set_start(builder, 0))
+  ignore(@moon-wfst.set_final(builder, 1, 1))
+  for weight in [1, -1] {
+    ignore(
+      @moon-wfst.add_arc(
+        builder,
+        0,
+        @moon-wfst.Symbol("a"),
+        @moon-wfst.Symbol("b"),
+        1,
+        weight,
+      ),
+    )
+  }
+  let graph = @moon-wfst.build_transducer(builder)
+  assert_true(
+    @moon-wfst.accepts_pair(graph, ["a"], ["b"], value => value == 0).unwrap(),
+  )
+  assert_eq(@moon-wfst.total_weight_in_dag(graph).unwrap(), 0)
+}
+
+///|
+test "aggregation counts stopping and continuing paths and rejects disconnected cycles" {
+  let builder = @moon-wfst.transducer_builder(@moon-wfst.boolean_semiring())
+  for _ in 0..<3 {
+    ignore(@moon-wfst.add_state(builder))
+  }
+  ignore(@moon-wfst.set_start(builder, 0))
+  ignore(@moon-wfst.set_final(builder, 0, true))
+  ignore(@moon-wfst.set_final(builder, 1, true))
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      0,
+      @moon-wfst.Epsilon,
+      @moon-wfst.Epsilon,
+      1,
+      true,
+    ),
+  )
+  let acyclic = @moon-wfst.build_transducer(builder)
+  assert_eq(@moon-wfst.backward_weights_in_dag(acyclic).unwrap(), [
+    true, true, false,
+  ])
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      2,
+      @moon-wfst.Epsilon,
+      @moon-wfst.Epsilon,
+      2,
+      true,
+    ),
+  )
+  let cyclic = @moon-wfst.build_transducer(builder)
+  assert_true(
+    @moon-wfst.forward_weights_in_dag(cyclic) is Err(@moon-wfst.GraphHasCycle),
+  )
+  assert_true(
+    @moon-wfst.backward_weights_in_dag(cyclic) is Err(@moon-wfst.GraphHasCycle),
+  )
+  assert_true(
+    @moon-wfst.total_weight_in_dag(cyclic) is Err(@moon-wfst.GraphHasCycle),
+  )
+  // A builder mutation does not change an earlier topology snapshot.
+  assert_true(@moon-wfst.total_weight_in_dag(acyclic).unwrap())
+}

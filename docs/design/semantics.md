@@ -4,7 +4,7 @@ MoonWFST models a finite directed graph as a weighted relation. A state is an in
 
 ## Semiring contract
 
-A caller-provided semiring supplies additive zero, multiplicative one, alternative-path addition (`plus`), and sequential path extension (`times`). The library cannot prove the semiring axioms. Callers must ensure the operations are closed, associative, distributive, and use the supplied identities consistently. Composition preserves left-to-right multiplication order, which matters for non-commutative semirings.
+A caller-provided semiring supplies additive zero, multiplicative one, alternative-path addition (`plus`), and sequential path extension (`times`). The library cannot prove the semiring axioms. Callers must ensure the operations are closed, associative, distributive, and use the supplied identities consistently. DAG aggregation and concatenation preserve sequential multiplication order, including for non-commutative semirings. Composition has the stronger requirement that multiplication is commutative: it interleaves weights from two paths, so `(a1 × b1) × (a2 × b2)` must agree with `(a1 × a2) × (b1 × b2)`. The library cannot verify this law. Boolean and bounded tropical weights satisfy it.
 
 The Boolean semiring is provided for reachability-style relations. A bounded non-negative tropical semiring is provided for least-cost examples. Its finite costs are non-negative machine integers; addition of path costs saturates to tropical infinity at the documented bound, so overflow never wraps into a cheaper path.
 
@@ -14,11 +14,11 @@ The Boolean semiring is provided for reachability-style relations. A bounded non
 - Output projection copies each output label to the input side.
 - Inversion swaps the two labels on every arc.
 - These transformations preserve topology, weights, start state, and final weights.
-- Composition joins a left arc's output symbol to a right arc's input symbol and multiplies weights in left-to-right order. The first implementation is explicitly epsilon-free: if either graph contains epsilon on either side, composition returns `UnsupportedEpsilonComposition`. No epsilon filter is implied.
+- Composition joins a left arc's output symbol to a right arc's input symbol and multiplies each matched pair of arc weights, then multiplies the terminal weights. Compatible semirings with commutative multiplication are required. The first implementation is explicitly epsilon-free: if either graph contains epsilon on either side, composition returns `UnsupportedEpsilonComposition`. No epsilon filter is implied.
 
 ## Shortest accepting path
 
-The ordered-weight API is only valid when its comparison is consistent with the semiring's choice operation, path extension is monotone, and every arc and terminal weight accepted by Dijkstra is non-negative in the supplied order. The library checks the caller-provided non-negative predicate on actual arc/final weights; it cannot prove the algebraic laws. Ties are resolved by stable state and arc insertion order. A result carries the accepting state sequence, traversed arcs, and total weight including the final weight. Unreachable accepting states produce `NoAcceptingPath`, not an infinity-valued pseudo-path.
+The ordered-weight API is only valid when its comparison is consistent with the semiring's choice operation, path extension is monotone and nondecreasing (extending a path cannot improve its weight), and every arc and terminal weight accepted by Dijkstra is non-negative in the supplied order. The library checks the caller-provided non-negative predicate on actual arc/final weights; it cannot prove the algebraic laws. Ties are resolved by stable state and arc insertion order. A result carries the accepting state sequence, traversed arcs, and total weight including the final weight. Unreachable accepting states produce `NoAcceptingPath`, not an infinity-valued pseudo-path.
 
 ## Resource and failure behavior
 
@@ -42,7 +42,7 @@ These constructors use the left operand's semiring for synthetic branch arcs. Th
 
 ## Exact relation membership
 
-`accepts_pair` explores the finite product `(graph state, input position, output position)` and returns whether a path consumes both token arrays completely and ends at an explicit final state. Each side consumes independently: epsilon on one side does not imply epsilon on the other. A caller-supplied `is_zero` predicate excludes semiring-zero arcs and finals; all other weight values are ignored, so this query recognizes membership but does not aggregate weights or return a witness. The predicate must be deterministic and side-effect free. The implementation memoizes the product space, using `O(V × (|input| + 1) × (|output| + 1))` memory, and terminates even with epsilon/epsilon cycles. A graph without a start returns `NoStartState`.
+`accepts_pair` explores the finite product `(graph state, input position, output position)` and returns whether a path consumes both token arrays completely and ends at an explicit final state. Each side consumes independently: epsilon on one side does not imply epsilon on the other. A caller-supplied `is_zero` predicate excludes semiring-zero arcs and finals; all other weight values are ignored, so this query recognizes support-graph membership but does not aggregate weights or return a witness. It does not test whether the aggregate weighted relation is nonzero: cancellation between alternative paths, zero divisors, or saturating products may make an accepted pair have aggregate weight zero. The predicate must be deterministic and side-effect free. The implementation memoizes the product space, using `O(V × (|input| + 1) × (|output| + 1))` memory, and terminates even with epsilon/epsilon cycles. A graph without a start returns `NoStartState`.
 
 ## Multiple best paths on DAGs
 
@@ -56,3 +56,7 @@ These constructors use the left operand's semiring for synthetic branch arcs. Th
 `forward_weights_in_dag` returns one semiring value per state, indexed by dense state ID. It seeds the declared start with semiring one and propagates `prefix × arc` in topological order; unreachable states retain semiring zero. With no start, every forward entry is zero. `backward_weights_in_dag` works in reverse topological order: each state's explicit final weight is one accepting suffix candidate, and every outgoing arc contributes `arc × destination_suffix`. Thus a state that is both final and has outgoing accepting paths aggregates both possibilities. `total_weight_in_dag` returns the backward value at the declared start, or semiring zero when no start exists.
 
 All three operations require the entire graph to be acyclic, including disconnected components. This avoids silently assigning finite results to cyclic path sets without a semiring-specific closure. The caller owns the semiring laws and interpretation; the implementation does not normalize probabilities. Tests use an integer sum/product semiring to hand-check a two-branch graph, a Boolean semiring for a missing start, and a self-loop to verify cycle errors.
+
+## Snapshot and weight ownership
+
+Builder snapshots copy graph arrays and arc records, so later builder edits cannot mutate the stored topology. Generic weights are values supplied by the caller: mutable objects contained in a weight are not deep-cloned. Semiring functions must not mutate shared weights; callers needing stronger isolation should use immutable weights or explicitly copy their own payloads.
