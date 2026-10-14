@@ -46,7 +46,7 @@
 
 已记录检索限制：Moon 搜索结果有上限且无分页；GitHub API 曾遇限流；`zploc/loci` 和 DWT 相邻项目的测试未能全部核验；部分压缩实现也未全部检查源码和测试。因此结论只适用于已记录检索范围，不能声称穷尽所有分支、未发布代码或仓库。
 
-跨语言成熟参照包括 [OpenFst](https://github.com/mjansche/openfst)（Apache-2.0）和 [RustFST](https://github.com/GWBM/RustFST)（MIT/Apache-2.0）。它们用于核对 WFST 的数据模型、算法语义和预期行为；本项目将以 MoonBit 独立实现经明确界定的子集，不复制来源不明代码，也不把未实现的 OpenFst/RustFST 能力写成已支持特性。最终第三方归属文件须在实施前按实际采用的参考与依赖补齐。
+跨语言成熟参照包括 [OpenFst](https://github.com/mjansche/openfst)（Apache-2.0）和 [RustFST](https://github.com/GWBM/RustFST)（MIT/Apache-2.0）。它们用于核对 WFST 的数据模型、算法语义和预期行为；本项目将以 MoonBit 独立实现经明确界定的子集，不复制来源不明代码，也不把未实现的 OpenFst/RustFST 能力写成已支持特性。项目的 `THIRD-PARTY-NOTICES.md` 已按当前实际参考与依赖记录归属；源码与示例为独立 MoonBit 实现，未复制来源不明代码。
 
 ## 5. 实施前必须继续遵守的约束
 
