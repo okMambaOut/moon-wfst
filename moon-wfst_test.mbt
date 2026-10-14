@@ -1437,3 +1437,103 @@ test "accepting core agrees with trim and identifies already trimmed graphs" {
     @moon-wfst.transducer_is_trimmed(@moon-wfst.build_transducer(empty)),
   )
 }
+
+///|
+test "forward and backward semiring passes aggregate every accepting derivation" {
+  let integers : @moon-wfst.Semiring[Int] = {
+    zero: 0,
+    one: 1,
+    plus: (left, right) => left + right,
+    times: (left, right) => left * right,
+  }
+  let builder = @moon-wfst.transducer_builder(integers)
+  let start = @moon-wfst.add_state(builder)
+  let left = @moon-wfst.add_state(builder)
+  let right = @moon-wfst.add_state(builder)
+  let final_id = @moon-wfst.add_state(builder)
+  ignore(@moon-wfst.set_start(builder, start))
+  ignore(@moon-wfst.set_final(builder, final_id, 11))
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      start,
+      @moon-wfst.Label::Symbol("a"),
+      @moon-wfst.Label::Symbol("a"),
+      left,
+      2,
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      start,
+      @moon-wfst.Label::Symbol("b"),
+      @moon-wfst.Label::Symbol("b"),
+      right,
+      3,
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      left,
+      @moon-wfst.Label::Symbol("x"),
+      @moon-wfst.Label::Symbol("x"),
+      final_id,
+      5,
+    ),
+  )
+  ignore(
+    @moon-wfst.add_arc(
+      builder,
+      right,
+      @moon-wfst.Label::Symbol("y"),
+      @moon-wfst.Label::Symbol("y"),
+      final_id,
+      7,
+    ),
+  )
+  let graph = @moon-wfst.build_transducer(builder)
+  assert_eq(@moon-wfst.forward_weights_in_dag(graph).unwrap(), [1, 2, 3, 31])
+  assert_eq(@moon-wfst.backward_weights_in_dag(graph).unwrap(), [
+    341, 55, 77, 11,
+  ])
+  assert_eq(@moon-wfst.total_weight_in_dag(graph).unwrap(), 341)
+}
+
+///|
+test "DAG semiring passes define missing-start and cycle behavior" {
+  let operations = @moon-wfst.boolean_semiring()
+  let no_start_builder = @moon-wfst.transducer_builder(operations)
+  let disconnected = @moon-wfst.add_state(no_start_builder)
+  ignore(@moon-wfst.set_final(no_start_builder, disconnected, true))
+  let no_start = @moon-wfst.build_transducer(no_start_builder)
+  assert_eq(@moon-wfst.forward_weights_in_dag(no_start).unwrap(), [false])
+  assert_eq(@moon-wfst.backward_weights_in_dag(no_start).unwrap(), [true])
+  assert_true(!@moon-wfst.total_weight_in_dag(no_start).unwrap())
+
+  let cyclic_builder = @moon-wfst.transducer_builder(operations)
+  let state = @moon-wfst.add_state(cyclic_builder)
+  ignore(@moon-wfst.set_start(cyclic_builder, state))
+  ignore(@moon-wfst.set_final(cyclic_builder, state, true))
+  ignore(
+    @moon-wfst.add_arc(
+      cyclic_builder,
+      state,
+      @moon-wfst.Label::Epsilon,
+      @moon-wfst.Label::Epsilon,
+      state,
+      true,
+    ),
+  )
+  let cyclic = @moon-wfst.build_transducer(cyclic_builder)
+  assert_true(
+    @moon-wfst.forward_weights_in_dag(cyclic) is Err(@moon-wfst.GraphHasCycle),
+  )
+  assert_true(
+    @moon-wfst.backward_weights_in_dag(cyclic) is Err(@moon-wfst.GraphHasCycle),
+  )
+  assert_true(
+    @moon-wfst.total_weight_in_dag(cyclic) is Err(@moon-wfst.GraphHasCycle),
+  )
+}

@@ -22,6 +22,8 @@ pub fn[W] add_arc(TransducerBuilder[W], Int, Label, Label, Int, W) -> Result[Uni
 
 pub fn[W] add_state(TransducerBuilder[W]) -> Int
 
+pub fn[W] backward_weights_in_dag(Transducer[W]) -> Result[Array[W], WfstError]
+
 pub fn boolean_semiring() -> Semiring[Bool]
 
 pub fn[W] build_transducer(TransducerBuilder[W]) -> Transducer[W]
@@ -33,6 +35,8 @@ pub fn[W] coaccessible_states(Transducer[W]) -> Array[Bool]
 pub fn[W] compose(Transducer[W], Transducer[W]) -> Result[Transducer[W], WfstError]
 
 pub fn[W] concatenate_transducers(Transducer[W], Transducer[W]) -> Transducer[W]
+
+pub fn[W] forward_weights_in_dag(Transducer[W]) -> Result[Array[W], WfstError]
 
 pub fn[W] invert(Transducer[W]) -> Transducer[W]
 
@@ -65,6 +69,8 @@ pub fn[W] shortest_path(Transducer[W], PathOrder[W]) -> Result[AcceptingPath[W],
 pub fn[W] shortest_paths_in_dag(Transducer[W], PathOrder[W], Int) -> Result[Array[AcceptingPath[W]], WfstError]
 
 pub fn[W] topological_order(Transducer[W]) -> Result[Array[Int], WfstError]
+
+pub fn[W] total_weight_in_dag(Transducer[W]) -> Result[W, WfstError]
 
 pub fn[W] transducer_arcs_from(Transducer[W], Int) -> Result[Array[Arc[W]], WfstError]
 
