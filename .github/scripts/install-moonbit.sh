@@ -12,6 +12,8 @@ printf '%s  %s\n' \
 mkdir -p "$HOME/.moon/lib"
 tar -xzf "$work/moonbit.tar.gz" -C "$HOME/.moon"
 tar -xzf "$work/core.tar.gz" -C "$HOME/.moon/lib"
+# Official archives require the same executable-bit repair as unix.sh.
+chmod +x "$HOME/.moon/bin/"* "$HOME/.moon/bin/internal/tcc"
 export PATH="$HOME/.moon/bin:$PATH"
 moon version | grep -F 'moon 0.1.20261016 (1af328f'
 moon -C "$HOME/.moon/lib/core" bundle --warn-list -a --all
