@@ -3,8 +3,8 @@
 /// graph owns copies of its adjacency and final-weight arrays.
 pub struct TransducerBuilder[W] {
   semiring : Semiring[W]
-  outgoing : Array[Array[Arc[W]]]
-  final_weights : Array[W?]
+  priv outgoing : Array[Array[Arc[W]]]
+  priv final_weights : Array[W?]
   mut start : Int32?
 }
 
@@ -13,8 +13,8 @@ pub struct TransducerBuilder[W] {
 /// mutable references; use the accessors to inspect a snapshot.
 pub struct Transducer[W] {
   semiring : Semiring[W]
-  outgoing : Array[Array[Arc[W]]]
-  final_weights : Array[W?]
+  priv outgoing : Array[Array[Arc[W]]]
+  priv final_weights : Array[W?]
   start : Int32?
 }
 

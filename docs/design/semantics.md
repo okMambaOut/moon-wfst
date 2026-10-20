@@ -60,3 +60,5 @@ All three operations require the entire graph to be acyclic, including disconnec
 ## Snapshot and weight ownership
 
 Builder snapshots copy graph arrays and arc records, so later builder edits cannot mutate the stored topology. Generic weights are values supplied by the caller: mutable objects contained in a weight are not deep-cloned. Semiring functions must not mutate shared weights; callers needing stronger isolation should use immutable weights or explicitly copy their own payloads.
+
+The topology arrays in builders and snapshots, accepting-path traces, and trim mappings are private. Use the public accessors, which return copied arrays. This closes the former direct-field mutation bypass; clients reading these internal array fields must migrate to the accessors. Generic weight payloads still follow the immutable-value contract above.

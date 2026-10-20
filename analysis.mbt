@@ -3,7 +3,7 @@
 /// identifier. `None` means that the original state was removed.
 pub struct TrimResult[W] {
   graph : Transducer[W]
-  old_to_new : Array[Int32?]
+  priv old_to_new : Array[Int32?]
 }
 
 ///|
@@ -150,9 +150,9 @@ pub fn[W] trim(transducer : Transducer[W]) -> TrimResult[W] {
 
 ///|
 /// Return a deterministic topological order of every state in a DAG.
-/// All disconnected components are included. Among currently ready states,
-/// lower state identifiers are emitted first; newly ready states are appended
-/// after states already in the queue. A cyclic graph returns `GraphHasCycle`.
+/// All disconnected components are included. Initially ready states are queued
+/// in ascending state-id order; newly ready states follow outgoing-arc insertion
+/// order and are appended to the queue. A cycle returns `GraphHasCycle`.
 pub fn[W] topological_order(
   transducer : Transducer[W],
 ) -> Result[Array[Int32], WfstError] {

@@ -38,8 +38,8 @@ pub(all) struct PathStep[W] {
 ///|
 /// A least-cost accepting path with its terminal weight included in `total`.
 pub struct AcceptingPath[W] {
-  states : Array[Int32]
-  steps : Array[PathStep[W]]
+  priv states : Array[Int32]
+  priv steps : Array[PathStep[W]]
   final_weight : W
   total : W
 }

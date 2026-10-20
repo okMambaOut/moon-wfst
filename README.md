@@ -2,7 +2,11 @@
 
 MoonWFST 是可复用的 MoonBit **加权有限状态转导机（WFST）基础库**。转导机用有限图表示输入与输出之间的关系：每条弧包含输入标签、输出标签及权重，权重由调用者提供的半环解释。本库面向语音候选格处理、形态分析、OCR 后处理、分词及其他有限状态处理流程，提供共享的数据模型和算法；它本身不是识别器，也不包含领域模型。
 
-**版本与范围：**`0.1.1` 是中文文档更新版本，核心代码与公共 API 相比 `0.1.0` 不变。已实现能力是有明确边界的 WFST 子集，不是 OpenFst 的完整替代。下文示例使用源码中定义的合成图，不是生产数据或性能基准。
+**版本与范围：**`0.1.2` 修复图拓扑和路径等内部数组可被外部直接修改的问题，并增加边界回归。已实现能力是有明确边界的 WFST 子集，不是 OpenFst 的完整替代。下文示例使用源码中定义的合成图，不是生产数据或性能基准。
+
+## 0.1.2 兼容性说明
+
+构图器与图快照的拓扑数组、接受路径轨迹、修剪映射均改为私有字段。请通过 `transducer_arcs_from`、`transducer_final_weight`、`accepting_path_states`、`accepting_path_steps` 和 `trim_result_state_mapping` 等公开访问器读取。公开函数签名不变；直接读取这些内部数组字段的代码需要迁移。可变权重载荷仍不提供深复制保证。旧版 `0.1.1` 不包含此修复。
 
 ## 已实现能力
 
@@ -19,7 +23,7 @@ MoonWFST 是可复用的 MoonBit **加权有限状态转导机（WFST）基础�
 在已有 MoonBit 模块中安装精确版本：
 
 ```powershell
-moon add okMambaOut/moon-wfst@0.1.1
+moon add okMambaOut/moon-wfst@0.1.2
 ```
 
 在使用该库的包目录中，通过 `moon.pkg` 指定导入别名：
@@ -32,7 +36,7 @@ import {
 
 通过 `@wfst.transducer_builder` 创建构图器，再使用 `add_state`、`set_start`、`set_final`、`add_arc` 和 `build_transducer` 构造关系图。完整的构图、组合、路径排序和结果提取流程见 [语音候选格示例](examples/speech_lattice/main.mbt)。
 
-模块名称为 `okMambaOut/moon-wfst`。版本与公开材料见 [GitHub Release](https://github.com/okMambaOut/moon-wfst/releases/tag/v0.1.1) 和 [MoonCakes 模块页面](https://mooncakes.io/docs/okMambaOut/moon-wfst)。
+模块名称为 `okMambaOut/moon-wfst`。版本与公开材料见 [GitHub Release](https://github.com/okMambaOut/moon-wfst/releases/tag/v0.1.2) 和 [MoonCakes 模块页面](https://mooncakes.io/docs/okMambaOut/moon-wfst)。
 
 ## 三个可运行示例
 
@@ -77,9 +81,9 @@ moon build --target wasm-gc --deny-warn
 moon test --target wasm-gc --deny-warn
 ```
 
-2026-10-14，在本机 Moon `0.1.20261012` 下，wasm-gc、WebAssembly 和 JavaScript 各通过 **47/47 项测试**；四目标严格检查通过，wasm-gc、wasm 和 js 构建通过。三个示例在 wasm-gc 上得到上述结果。本机没有 `cc`、`gcc` 或 `clang`，因此不声称本地执行过 native 构建或测试。
+2026-10-20，在本机 Moon `0.1.20261012` 下，wasm-gc、WebAssembly 和 JavaScript 各通过 **56/56 项仓库测试**，各完成严格检查与构建。另在仓库外独立消费者中，以 Python 穷举路径、整数矩阵计算和循环图有限不动点计算作为预期，每个后端通过 **208 项独立验算**；这些测试不是性能或真实识别准确率结论。三个示例在三个本地后端均得到上述结果。
 
-[已验证的 0.1.0 CI](https://github.com/okMambaOut/moon-wfst/actions/runs/38513866594) 对提交 `a9f41819222e96b6b5f5904a5a9012cc54c27d0a` 的五个作业全部通过，包括四目标检查、构建和测试，以及三个 wasm-gc 示例。各后续发布提交必须在自己的 SHA 上通过相同工作流；最新运行见 [GitHub Actions](https://github.com/okMambaOut/moon-wfst/actions)。
+本机 native 严格检查通过，但缺少 MSVC C++ 工具和 Windows SDK，未执行本机 native 构建或测试。[GitHub Actions](https://github.com/okMambaOut/moon-wfst/actions) 工作流对每个发布提交分别执行四目标检查、构建、测试，以及三个 wasm-gc 示例；发布以对应 SHA 的真实运行结果为准，不沿用旧版 CI 证明新版。
 
 根目录基础库包含 **1604 物理行非测试 `.mbt` 实现**，计数包含空行，不包含测试、示例、生成接口或构建输出。这是实现规模与验证事实，不是性能结论。
 

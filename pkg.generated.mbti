@@ -118,10 +118,9 @@ pub fn[W] union_transducers(Transducer[W], Transducer[W]) -> Transducer[W]
 
 // Types and methods
 pub struct AcceptingPath[W] {
-  states : Array[Int]
-  steps : Array[PathStep[W]]
   final_weight : W
   total : W
+  // private fields
 }
 
 pub(all) struct Arc[W] {
@@ -159,16 +158,14 @@ pub(all) struct Semiring[W] {
 
 pub struct Transducer[W] {
   semiring : Semiring[W]
-  outgoing : Array[Array[Arc[W]]]
-  final_weights : Array[W?]
   start : Int?
+  // private fields
 }
 
 pub struct TransducerBuilder[W] {
   semiring : Semiring[W]
-  outgoing : Array[Array[Arc[W]]]
-  final_weights : Array[W?]
   mut start : Int?
+  // private fields
 }
 
 pub(all) struct TransducerStats {
@@ -187,7 +184,7 @@ pub fn TransducerStats::not_equal(Self, Self) -> Bool
 
 pub struct TrimResult[W] {
   graph : Transducer[W]
-  old_to_new : Array[Int?]
+  // private fields
 }
 
 pub enum TropicalWeight {
