@@ -81,9 +81,11 @@ moon build --target wasm-gc --deny-warn
 moon test --target wasm-gc --deny-warn
 ```
 
-2026-10-20，在本机 Moon `0.1.20261012` 下，wasm-gc、WebAssembly 和 JavaScript 各通过 **56/56 项仓库测试**，各完成严格检查与构建。另在仓库外独立消费者中，以 Python 穷举路径、整数矩阵计算和循环图有限不动点计算作为预期，每个后端通过 **208 项独立验算**；这些测试不是性能或真实识别准确率结论。三个示例在三个本地后端均得到上述结果。
+2026-10-20，在本机 Moon `0.1.20261016` 下，wasm-gc、WebAssembly 和 JavaScript 各通过 **56/56 项仓库测试**，各完成严格检查与构建。另在仓库外独立消费者中，以 Python 穷举路径、整数矩阵计算和循环图有限不动点计算作为预期，每个后端通过 **208 项独立验算**；这些测试不是性能或真实识别准确率结论。三个示例在三个本地后端均得到上述结果。
 
-本机 native 严格检查通过，但缺少 MSVC C++ 工具和 Windows SDK，未执行本机 native 构建或测试。[GitHub Actions](https://github.com/okMambaOut/moon-wfst/actions) 工作流对每个发布提交分别执行四目标检查、构建、测试，以及三个 wasm-gc 示例；发布以对应 SHA 的真实运行结果为准，不沿用旧版 CI 证明新版。
+本机 native 严格检查通过；构建实际尝试因缺少 MSVC C++ 工具和 Windows SDK 而失败，因此未运行本机 native 测试。[GitHub Actions](https://github.com/okMambaOut/moon-wfst/actions) 工作流对每个发布提交分别执行四目标检查、构建、测试，以及三个 wasm-gc 示例；发布以对应 SHA 的真实运行结果为准，不沿用旧版 CI 证明新版。
+
+CI 对官方 Linux 2026-10-16 工具链及 core 下载执行固定 SHA-256 校验并核对版本；若官方 `latest` 内容变化会明确失败，维护者需重新验证后更新校验和与生成接口，不跳过门禁。安装脚本位于 `.github/scripts/install-moonbit.sh`。
 
 根目录基础库包含 **1604 物理行非测试 `.mbt` 实现**，计数包含空行，不包含测试、示例、生成接口或构建输出。这是实现规模与验证事实，不是性能结论。
 

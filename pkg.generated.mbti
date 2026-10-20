@@ -10,7 +10,7 @@ pub fn[W] accepting_core_states(Transducer[W]) -> Array[Bool]
 
 pub fn[W] accepting_path_final_weight(AcceptingPath[W]) -> W
 
-pub fn[W] accepting_path_states(AcceptingPath[W]) -> Array[Int]
+pub fn[W] accepting_path_states(AcceptingPath[W]) -> Array[Int32]
 
 pub fn[W] accepting_path_steps(AcceptingPath[W]) -> Array[PathStep[W]]
 
@@ -18,9 +18,9 @@ pub fn[W] accepting_path_total_weight(AcceptingPath[W]) -> W
 
 pub fn[W] accepts_pair(Transducer[W], Array[String], Array[String], (W) -> Bool) -> Result[Bool, WfstError]
 
-pub fn[W] add_arc(TransducerBuilder[W], Int, Label, Label, Int, W) -> Result[Unit, WfstError]
+pub fn[W] add_arc(TransducerBuilder[W], Int32, Label, Label, Int32, W) -> Result[Unit, WfstError]
 
-pub fn[W] add_state(TransducerBuilder[W]) -> Int
+pub fn[W] add_state(TransducerBuilder[W]) -> Int32
 
 pub fn[W] backward_weights_in_dag(Transducer[W]) -> Result[Array[W], WfstError]
 
@@ -28,7 +28,7 @@ pub fn boolean_semiring() -> Semiring[Bool]
 
 pub fn[W] build_transducer(TransducerBuilder[W]) -> Transducer[W]
 
-pub fn[W] clear_final(TransducerBuilder[W], Int) -> Result[Unit, WfstError]
+pub fn[W] clear_final(TransducerBuilder[W], Int32) -> Result[Unit, WfstError]
 
 pub fn[W] coaccessible_states(Transducer[W]) -> Array[Bool]
 
@@ -42,7 +42,7 @@ pub fn[W] invert(Transducer[W]) -> Transducer[W]
 
 pub fn label_is_epsilon(Label) -> Bool
 
-pub fn[W] path_order((W, W) -> Int, (W) -> Bool, (W) -> Bool) -> PathOrder[W]
+pub fn[W] path_order((W, W) -> Int32, (W) -> Bool, (W) -> Bool) -> PathOrder[W]
 
 pub fn[W] project_input(Transducer[W]) -> Transducer[W]
 
@@ -50,7 +50,7 @@ pub fn[W] project_output(Transducer[W]) -> Transducer[W]
 
 pub fn[W] reachable_states(Transducer[W]) -> Array[Bool]
 
-pub fn[W] reachable_states_from(Transducer[W], Int) -> Result[Array[Bool], WfstError]
+pub fn[W] reachable_states_from(Transducer[W], Int32) -> Result[Array[Bool], WfstError]
 
 pub fn[W] semiring_one(Semiring[W]) -> W
 
@@ -60,47 +60,47 @@ pub fn[W] semiring_times(Semiring[W], W, W) -> W
 
 pub fn[W] semiring_zero(Semiring[W]) -> W
 
-pub fn[W] set_final(TransducerBuilder[W], Int, W) -> Result[Unit, WfstError]
+pub fn[W] set_final(TransducerBuilder[W], Int32, W) -> Result[Unit, WfstError]
 
-pub fn[W] set_start(TransducerBuilder[W], Int) -> Result[Unit, WfstError]
+pub fn[W] set_start(TransducerBuilder[W], Int32) -> Result[Unit, WfstError]
 
 pub fn[W] shortest_path(Transducer[W], PathOrder[W]) -> Result[AcceptingPath[W], WfstError]
 
-pub fn[W] shortest_paths_in_dag(Transducer[W], PathOrder[W], Int) -> Result[Array[AcceptingPath[W]], WfstError]
+pub fn[W] shortest_paths_in_dag(Transducer[W], PathOrder[W], Int32) -> Result[Array[AcceptingPath[W]], WfstError]
 
-pub fn[W] topological_order(Transducer[W]) -> Result[Array[Int], WfstError]
+pub fn[W] topological_order(Transducer[W]) -> Result[Array[Int32], WfstError]
 
 pub fn[W] total_weight_in_dag(Transducer[W]) -> Result[W, WfstError]
 
-pub fn[W] transducer_arcs_from(Transducer[W], Int) -> Result[Array[Arc[W]], WfstError]
+pub fn[W] transducer_arcs_from(Transducer[W], Int32) -> Result[Array[Arc[W]], WfstError]
 
 pub fn[W] transducer_builder(Semiring[W]) -> TransducerBuilder[W]
 
-pub fn[W] transducer_final_weight(Transducer[W], Int) -> Result[W?, WfstError]
+pub fn[W] transducer_final_weight(Transducer[W], Int32) -> Result[W?, WfstError]
 
 pub fn[W] transducer_has_epsilon(Transducer[W]) -> Bool
 
-pub fn[W] transducer_incoming_arcs(Transducer[W], Int) -> Result[Array[(Int, Arc[W])], WfstError]
+pub fn[W] transducer_incoming_arcs(Transducer[W], Int32) -> Result[Array[(Int32, Arc[W])], WfstError]
 
 pub fn[W] transducer_is_trimmed(Transducer[W]) -> Bool
 
 pub fn[W] transducer_semiring(Transducer[W]) -> Semiring[W]
 
-pub fn[W] transducer_start_state(Transducer[W]) -> Int?
+pub fn[W] transducer_start_state(Transducer[W]) -> Int32?
 
-pub fn[W] transducer_state_count(Transducer[W]) -> Int
+pub fn[W] transducer_state_count(Transducer[W]) -> Int32
 
 pub fn[W] transducer_stats(Transducer[W]) -> TransducerStats
 
 pub fn[W] trim(Transducer[W]) -> TrimResult[W]
 
-pub fn[W] trim_result_state_mapping(TrimResult[W]) -> Array[Int?]
+pub fn[W] trim_result_state_mapping(TrimResult[W]) -> Array[Int32?]
 
 pub fn[W] trim_result_transducer(TrimResult[W]) -> Transducer[W]
 
-pub fn tropical_compare(TropicalWeight, TropicalWeight) -> Int
+pub fn tropical_compare(TropicalWeight, TropicalWeight) -> Int32
 
-pub fn tropical_cost(Int) -> Result[TropicalWeight, WfstError]
+pub fn tropical_cost(Int32) -> Result[TropicalWeight, WfstError]
 
 pub fn tropical_infinity() -> TropicalWeight
 
@@ -110,7 +110,7 @@ pub fn tropical_path_order() -> PathOrder[TropicalWeight]
 
 pub fn tropical_semiring() -> Semiring[TropicalWeight]
 
-pub fn tropical_value(TropicalWeight) -> Int?
+pub fn tropical_value(TropicalWeight) -> Int32?
 
 pub fn[W] union_transducers(Transducer[W], Transducer[W]) -> Transducer[W]
 
@@ -126,7 +126,7 @@ pub struct AcceptingPath[W] {
 pub(all) struct Arc[W] {
   input : Label
   output : Label
-  destination : Int
+  destination : Int32
   weight : W
 }
 
@@ -139,13 +139,13 @@ pub fn Label::not_equal(Self, Self) -> Bool
 pub fn Label::to_repr(Self) -> @debug.Repr
 
 pub struct PathOrder[W] {
-  compare : (W, W) -> Int
+  compare : (W, W) -> Int32
   is_nonnegative : (W) -> Bool
   is_zero : (W) -> Bool
 }
 
 pub(all) struct PathStep[W] {
-  source : Int
+  source : Int32
   arc : Arc[W]
 }
 
@@ -158,25 +158,25 @@ pub(all) struct Semiring[W] {
 
 pub struct Transducer[W] {
   semiring : Semiring[W]
-  start : Int?
+  start : Int32?
   // private fields
 }
 
 pub struct TransducerBuilder[W] {
   semiring : Semiring[W]
-  mut start : Int?
+  mut start : Int32?
   // private fields
 }
 
 pub(all) struct TransducerStats {
-  state_count : Int
-  arc_count : Int
-  epsilon_input_arc_count : Int
-  epsilon_output_arc_count : Int
-  final_state_count : Int
-  max_out_degree : Int
-  reachable_state_count : Int
-  coaccessible_state_count : Int
+  state_count : Int32
+  arc_count : Int32
+  epsilon_input_arc_count : Int32
+  epsilon_output_arc_count : Int32
+  final_state_count : Int32
+  max_out_degree : Int32
+  reachable_state_count : Int32
+  coaccessible_state_count : Int32
   has_start : Bool
 } derive(Eq)
 pub fn TransducerStats::equal(Self, Self) -> Bool
@@ -188,17 +188,17 @@ pub struct TrimResult[W] {
 }
 
 pub enum TropicalWeight {
-  Finite(Int)
+  Finite(Int32)
   Infinity
 } derive(@debug.Debug)
 pub fn TropicalWeight::to_repr(Self) -> @debug.Repr
 
 pub(all) enum WfstError {
-  InvalidStateId(Int)
+  InvalidStateId(Int32)
   NoStartState
   UnsupportedEpsilonComposition
   GraphHasCycle
-  InvalidPathLimit(Int)
+  InvalidPathLimit(Int32)
   NegativeWeight
   WeightOutOfRange
   NoAcceptingPath

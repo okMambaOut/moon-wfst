@@ -23,9 +23,7 @@ jobs:
 
       - name: Install MoonBit
         shell: bash
-        run: |
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
-          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+        run: bash .github/scripts/install-moonbit.sh
 
       - name: Show toolchain
         run: moon version --all
@@ -56,9 +54,7 @@ jobs:
 
       - name: Install MoonBit
         shell: bash
-        run: |
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
-          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+        run: bash .github/scripts/install-moonbit.sh
 
       - name: Show toolchain
         run: moon version --all
